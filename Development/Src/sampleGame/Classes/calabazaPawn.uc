@@ -33,16 +33,10 @@ event Tick(float DeltaTime)
     SetRotation(NewRotation);
 }
 
-event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
-{
-    super.Touch(Other, OtherComp, HitLocation, HitNormal);
-
-    //if(String(Other.Tag) == "Player") destroy();
-    
-}
-
 DefaultProperties
 { 
+    Components.Remove(Sprite)
+    
     Begin Object Name=CollisionCylinder
         CollisionHeight=+44.000000
     End Object

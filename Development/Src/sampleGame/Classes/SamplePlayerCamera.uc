@@ -123,5 +123,6 @@ function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
 
 DefaultProperties
 {
-   DefaultFOV=90.f
+   DefaultFOV=90.f;
+   FreeCamDistance = 512;
 }

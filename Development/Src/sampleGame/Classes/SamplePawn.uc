@@ -5,11 +5,11 @@ Define Modelo - Animaciones - Afecta Luz o no
 
 class SamplePawn extends Pawn;
 
-var SpotLightComponent flashlight;
+var (Player) SpotLightComponent flashlight;
 var ParticleSystemComponent ParticlesFollowUs;
 var AnimNodeBlendList AnimNodeBlendList;
-var int maxCalabazas;
-var int nCalabazas;
+var (Player) int maxCalabazas;
+var (Player) int nCalabazas;
 
 enum EAnimState
 {

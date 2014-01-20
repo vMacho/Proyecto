@@ -140,12 +140,10 @@ event PlayerTick( float DeltaTime )
 
 exec function NextWeapon() //Scroll de la camara
 {
-	`Log("MouseScrollUp");
 	PlayerCamera.FreeCamDistance += (PlayerCamera.FreeCamDistance < 512) ? 64 : 0;
 }
 exec function PrevWeapon() //Scroll de la camara
 {
-	`Log("MouseScrollUp");
 	PlayerCamera.FreeCamDistance -= (PlayerCamera.FreeCamDistance > 128) ? 64 : 0;
 }
 
