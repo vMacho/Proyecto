@@ -8,6 +8,8 @@ class SamplePawn extends Pawn;
 var SpotLightComponent flashlight;
 var ParticleSystemComponent ParticlesFollowUs;
 var AnimNodeBlendList AnimNodeBlendList;
+var int maxCalabazas;
+var int nCalabazas;
 
 enum EAnimState
 {
@@ -81,6 +83,29 @@ simulated event Destroyed()
   AnimNodeBlendList = None;
 }
 
+event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
+{
+    local CalabazaActor calabaza;
+    local Vector NewPosition;
+    super.Touch(Other, OtherComp, HitLocation, HitNormal);
+
+    //Si chocamos con una calabaza y no hemos superado el limite de calabazas que podemos llevar
+    if(Other.Tag == 'CalabazaPawn' && nCalabazas < maxCalabazas)
+    {
+        calabaza = new class'CalabazaActor';
+
+        NewPosition.Z = 50 * nCalabazas;
+        calabaza.SetTranslation(NewPosition);
+        
+        Mesh.AttachComponentToSocket(calabaza, 'sk_head');
+        nCalabazas++;
+
+        `Log("COJO CALABAZA --> Total: "$nCalabazas$" "$Other.Tag);
+
+        Other.destroy();
+    }
+}
+
 defaultproperties
 {
     Components.Remove(Sprite)
@@ -90,8 +115,6 @@ defaultproperties
         MinTimeBetweenFullUpdates=0.2
         AmbientGlow=(R=.01,G=.01,B=.01,A=1)
         AmbientShadowColor=(R=0.15,G=0.15,B=0.15)
-        //LightShadowMode=LightShadow_ModulateBetter
-        //ShadowFilterQuality=SFQ_High
         bSynthesizeSHLight=TRUE
     End Object
     Components.Add(MyLightEnvironment)
@@ -115,6 +138,8 @@ defaultproperties
     Mesh=InitialSkeletalMesh;
     Components.Add(InitialSkeletalMesh);
 
+
+
      // Floating fix
     CollisionType=COLLIDE_BlockAll
     Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
@@ -130,9 +155,6 @@ defaultproperties
     End Object
     Components.Add(ParticlesFollow)
     ParticlesFollowUs = ParticlesFollow;
-    //ParticlesFollowUs.SetStopSpawning(-1, true);
-    //ParticlesFollowUs.DeactivateSystem();
-    //ParticlesFollowUs.SetActive(false);
 
     Begin Object Class=SpotLightComponent Name=Linterna //Linterna del jugador
         bEnabled = false;
@@ -149,5 +171,13 @@ defaultproperties
 
     DrawScale = 0.75;
     bCanJump=false
+
+    bCollideActors = true;
+    bBlockActors = false;
+
+    Tag = "Player";
+
+    maxCalabazas = 2;
+    nCalabazas = 0;
 }
 

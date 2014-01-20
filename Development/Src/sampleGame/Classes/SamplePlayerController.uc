@@ -73,14 +73,13 @@ event PlayerTick( float DeltaTime )
 	//Comocamos en la posicion el cursor 3D, en este caso no usamos.
 	//MouseCursor.SetLocation(MouseHitWorldLocation);	
 
-	//We use the right mouse button to move, change it to suit your need !
+	//Usamos el boton derecho para movernos
 	if(bRightMousePressed)
 	{
-		//accumulate the time for knowing how much time the button was pressed.
+		//Guardamos el tiempo que dicho boton ha estado pulsado
 		DeltaTimeAccumulated += DeltaTime;
 
-		//Update destination so that while holding the mouse down the destination changes
-		//with the mouse move.
+		//Actualizamos la posicion mientras el boton siga presionado
 		SetDestinationPosition(MouseHitWorldLocation);
 		
 		//If its not already pushed, push the state that makes the pawn run to destination
@@ -90,24 +89,23 @@ event PlayerTick( float DeltaTime )
 		{
 			if(!IsInState('MoveMousePressedAndHold'))
 			{
-				`Log("Pushed MoveMousePressedAndHold state");
+				//`Log("Pushed MoveMousePressedAndHold state");
 				PushState('MoveMousePressedAndHold');
 			}
 			else
 			{
 				//Specify execution of current state, starting from label Begin:, ignoring all events and
 				//keeping our current pushed state MoveMousePressedAndHold. To better understand why this 
-				//continually execute each frame from our Begin: label, see
-				//http://udn.epicgames.com/Three/MasteringUnrealScriptStates.html,
-				//11.3 - BASIC STATE TRANSITIONS 
+				//continually execute each frame from our Begin: label
 				GotoState('MoveMousePressedAndHold', 'Begin', false, true);
 			}
 		}
 	}
 
+	//Usamos el boton derecho para atacar, si pulsamos sobre un enemigo primero va hasta su posicion
 	if(bLeftMousePressed)
 	{
-		//accumulate the time for knowing how much time the button was pressed.
+		//Guardamos el tiempo que dicho boton ha estado pulsado
 		DeltaTimeAccumulated += DeltaTime;
 		
 		//BUSCAMOS EL TARGET
@@ -129,9 +127,7 @@ event PlayerTick( float DeltaTime )
 				{
 					//Specify execution of current state, starting from label Begin:, ignoring all events and
 					//keeping our current pushed state MoveMousePressedAndHold. To better understand why this 
-					//continually execute each frame from our Begin: label, see
-					//http://udn.epicgames.com/Three/MasteringUnrealScriptStates.html,
-					//11.3 - BASIC STATE TRANSITIONS 
+					//continually execute each frame from our Begin: label
 					GotoState('AttackEnemy', 'Begin', false, true);
 				}
 			}
@@ -182,8 +178,8 @@ exec function StartFire(optional byte FireModeNum)
 	bRightMousePressed = FireModeNum == 1;
 
 	//comment these if not needed
-	if(bLeftMousePressed) `Log("Left Mouse pressed");
-	if(bRightMousePressed) `Log("Right Mouse pressed");
+	/*if(bLeftMousePressed) `Log("Left Mouse pressed");
+	if(bRightMousePressed) `Log("Right Mouse pressed");*/
 }
 
 /******************************************************************
@@ -201,17 +197,17 @@ exec function StartFire(optional byte FireModeNum)
  ******************************************************************/
 simulated function StopFire(optional byte FireModeNum )
 {
-	`Log("delta accumulated"@DeltaTimeAccumulated);
+	//`Log("delta accumulated"@DeltaTimeAccumulated);
 	//Un-Initialize mouse pressed over time.
 	if(bLeftMousePressed && FireModeNum == 0)
 	{
 		bLeftMousePressed = false;
-		`Log("Left Mouse released");
+		//`Log("Left Mouse released");
 	}
 	if(bRightMousePressed && FireModeNum == 1)
 	{
 		bRightMousePressed = false;
-		`Log("Right Mouse released");
+		//`Log("Right Mouse released");
 	
 		//If we are not near destination and click occured
 		if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
@@ -252,7 +248,7 @@ simulated function StopFire(optional byte FireModeNum )
  ******************************************************************/
 function MovePawnToDestination()
 {
-	`Log("Moving to location without pathfinding!");
+	//`Log("Moving to location without pathfinding!");
 	SetDestinationPosition(MouseHitWorldLocation);
 	PushState('MoveMouseClick');
 }
@@ -270,7 +266,7 @@ function MovePawnToDestination()
 function StopLingering()
 {
 	//Remove all current move state and query for input from now on.
-	`Log("Stopped lingering...");
+	//`Log("Stopped lingering...");
 	PopState(true);
 }
 
@@ -344,7 +340,7 @@ state MoveMouseClick
 {
 	event PoppedState()
 	{
-		`Log("MoveMouseClick state popped, disabling StopLingering timer.");
+		//`Log("MoveMouseClick state popped, disabling StopLingering timer.");
 		//Disable all active timers to stop lingering if they are active.
 		if(IsTimerActive(nameof(StopLingering)))
 		{
@@ -367,12 +363,12 @@ state MoveMouseClick
 Begin:
 	while(!bPawnNearDestination)
 	{
-		`Log("Simple Move in progress");
+		//`Log("Simple Move in progress");
 		MoveTo(GetDestinationPosition());
 		
 	}
 
-	`Log("MoveMouseClick: Pawn is near destination, go out of this state");
+	//`Log("MoveMouseClick: Pawn is near destination, go out of this state");
 	PopState();
 }
 
@@ -381,7 +377,7 @@ state AttackEnemy
 {
 	event PoppedState()
 	{
-		`Log("AttackEnemy state popped, disabling StopLingering timer.");
+		//`Log("AttackEnemy state popped, disabling StopLingering timer.");
 		//Disable all active timers to stop lingering if they are active.
 		if(IsTimerActive(nameof(StopLingering)))
 		{
@@ -398,12 +394,12 @@ state AttackEnemy
 Begin:
 	while(!bPawnNearDestination)
 	{
-		`Log("Go To Target");
+		//`Log("Go To Target");
 		MoveTo(targetTogo);
 
 	}
 	SamplePawn(Pawn).SetAnimationState(ST_Attack);
-	`Log("AttackEnemy: Pawn is near enemy, go out of this state");
+	//`Log("AttackEnemy: Pawn is near enemy, go out of this state");
 	PopState();
 	
 }
@@ -423,7 +419,7 @@ state MoveMousePressedAndHold
 Begin:
 	if(!bPawnNearDestination)
 	{
-		`Log("MoveMousePressedAndHold at pos"@GetDestinationPosition());
+		//`Log("MoveMousePressedAndHold at pos"@GetDestinationPosition());
 		MoveTo(GetDestinationPosition());
 	}
 	else

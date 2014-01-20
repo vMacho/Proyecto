@@ -22,6 +22,13 @@ simulated event PostBeginPlay()
     AddDefaultInventory(); //GameInfo calls it only for players, so we have to do it ourselves for AI.
 }
 
+event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
+{
+    super.Touch(Other, OtherComp, HitLocation, HitNormal);
+
+    
+}
+
 DefaultProperties
 {
     Begin Object Name=CollisionCylinder

@@ -1,9 +1,9 @@
  /* Victor Macho
-    Clase PAWN del Objeto Vida
+    Clase PAWN del Objeto Calabaza
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class CalabazaPawn extends Actor
+class CalabazaPawn extends Pawn
   placeable;
    
 var (calabaza) int life;
@@ -33,8 +33,20 @@ event Tick(float DeltaTime)
     SetRotation(NewRotation);
 }
 
+event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
+{
+    super.Touch(Other, OtherComp, HitLocation, HitNormal);
+
+    //if(String(Other.Tag) == "Player") destroy();
+    
+}
+
 DefaultProperties
 { 
+    Begin Object Name=CollisionCylinder
+        CollisionHeight=+44.000000
+    End Object
+
     Begin Object Class=StaticMeshComponent Name=CalabazaMesh
         StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'        
     End Object
