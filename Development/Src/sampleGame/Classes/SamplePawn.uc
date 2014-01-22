@@ -179,5 +179,6 @@ defaultproperties
 
     maxCalabazas = 2;
     nCalabazas = 0;
+
 }
 

@@ -24,7 +24,6 @@
 		
 		public function OnClick(event:MouseEvent): void
 		{
-			SetLabel("GO");
 			espera = new Timer(200, 1); //Delay para el click
 			espera.addEventListener(TimerEvent.TIMER, ControlaClick);
 			espera.start();

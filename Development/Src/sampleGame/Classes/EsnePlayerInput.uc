@@ -1,8 +1,7 @@
 class EsnePlayerInput extends PlayerInput
-		config(DoorOfLiesPlayerInput);
-
+		config(UDKDoorOfLiesPlayerInput);
 
 defaultproperties
 {
-	
+
 }

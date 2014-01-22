@@ -65,6 +65,7 @@ function ProcessViewRotation( float DeltaTime, out Rotator out_ViewRotation, Rot
 	
 }
 
+
 //Cada frame
 event PlayerTick( float DeltaTime )
 {
@@ -146,6 +147,17 @@ exec function PrevWeapon() //Scroll de la camara
 {
 	PlayerCamera.FreeCamDistance -= (PlayerCamera.FreeCamDistance > 128) ? 64 : 0;
 }
+
+exec function StrafeLeft()
+{
+	`Log("Hability 1");
+}
+
+function ActivateHability1()
+{
+	`Log("Hability 1");
+}
+
 
 /******************************************************************
  *

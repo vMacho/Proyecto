@@ -53,6 +53,15 @@ function OnMouseMove(int X, int Y)
 	_mousePosition.Y = Y;
 }
 
+function PauseGameControl(bool mode)
+{
+	local PlayerController PlayerController;
+
+	PlayerController = GetPC();
+
+	PlayerController.SetPause(mode);
+}
+
 function vector2d GetMouseCoordinates()
 {
 	return _mousePosition;

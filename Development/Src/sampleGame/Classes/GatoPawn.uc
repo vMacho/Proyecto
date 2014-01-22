@@ -4,6 +4,7 @@ Define Modelo - Animaciones - Afecta Luz o no
  */
 
 class GatoPawn extends Pawn
+  ClassGroup(Enemy)
   placeable;
    
 var(Gato) SkeletalMeshComponent NPCMesh;
