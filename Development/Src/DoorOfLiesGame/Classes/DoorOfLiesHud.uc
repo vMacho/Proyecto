@@ -8,6 +8,7 @@ Class DoorOfLiesHud extends GFxMoviePlayer;
 var GFxObject MC_Root;
 var GFxObject _HUDHealth;
 var private vector2d _mousePosition;
+var bool IsGamePaused;
 
 event bool Start(optional bool StartPaused = false) //Constructor
 {
@@ -57,9 +58,19 @@ function PauseGameControl(bool mode)
 {
 	local PlayerController PlayerController;
 
-	PlayerController = GetPC();
+	IsGamePaused = mode;
 
+	PlayerController = GetPC();
 	PlayerController.SetPause(mode);
+}
+
+function PauseGameControlPlayer()
+{
+	local PlayerController PlayerController;
+	IsGamePaused = !IsGamePaused;
+
+	PlayerController = GetPC();
+	PlayerController.SetPause(IsGamePaused);
 }
 
 function vector2d GetMouseCoordinates()

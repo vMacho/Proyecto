@@ -445,6 +445,12 @@ simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, in
 	MyHud(myHUD).MyHudHealth.SetDamage(Damage);
 }
 
+exec function PauseGame()
+{
+	`Log("PULSADO ESC");
+  	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
+}
+
 DefaultProperties
 {
 	CameraClass=class'DoorOfLiesPlayerCamera'

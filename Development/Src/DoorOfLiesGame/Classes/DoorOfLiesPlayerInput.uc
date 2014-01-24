@@ -1,5 +1,5 @@
 class DoorOfLiesPlayerInput extends PlayerInput
-		config(UDKDoorOfLiesPlayerInput);
+		config(DoorOfLiesPlayerInput);
 
 defaultproperties
 {
