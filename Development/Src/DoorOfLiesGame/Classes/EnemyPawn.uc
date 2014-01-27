@@ -29,9 +29,12 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
 DefaultProperties
 {
-    Begin Object Name=CollisionCylinder
-        CollisionHeight =+ 44.000000
+    CollisionType=COLLIDE_BlockAll
+    Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
+        CollisionRadius=+0021.000000
+        CollisionHeight=+0048.000000
     End Object
+    CylinderComponent=CollisionCylinder
  
     Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
         //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'

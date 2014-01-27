@@ -278,63 +278,58 @@ function PreCalcValues()
 
 function float GetPlayerHeading()
 {
-   local Vector v;
-   local Rotator r;
-   local float f;
+    local Float PlayerHeading;
+    local Rotator PlayerRotation;
+    local Vector v;
 
-   r.Yaw = PlayerOwner.Pawn.Rotation.Yaw;
-   v = vector(r);
-   f = GetHeadingAngle(v);
-   f = UnwindHeading(f);
+    PlayerRotation.Yaw = PlayerOwner.Pawn.Rotation.Yaw;
+    v = vector(PlayerRotation);
+    PlayerHeading = GetHeadingAngle(v);
+    PlayerHeading = UnwindHeading(PlayerHeading);
 
-   while (f < 0)
-      f += PI * 2.0f;
-
-   return f;
+    while (PlayerHeading < 0)
+        PlayerHeading += PI * 2.0f;
+    
+    return PlayerHeading;
 }
 
 function DrawMap()
 {
-    local Float TrueNorth;
-    local Float PlayerHeading;
-    local Float MapRotation;
-    local Float CompassRotation;
-    local Vector PlayerPos;
-    local Vector ClampedPlayerPos;
-    local Vector RotPlayerPos;
-    local Vector DisplayPlayerPos;
-    local vector StartPos;
+    local Float TrueNorth,PlayerHeading;
+    local Float MapRotation,CompassRotation;
+    local Vector PlayerPos, ClampedPlayerPos, RotPlayerPos, DisplayPlayerPos, StartPos;
     local LinearColor MapOffset;
     local Float ActualMapRange;
-    local Controller C;
+    local CalabazaPawn C;
+
     local MaterialInstanceConstant MatInst;
     local MaterialInstanceConstant MatInstCompassOverlay;
 
     if(GameMinimap != none)
     {
+        //Set MapDim & BoxSize accounting for the current resolution        
         MapPosition.X = default.MapPosition.X * FullWidth + ViewX - MapDim;
         MapPosition.Y = default.MapPosition.Y * FullHeight;
-
         MapDim = default.MapDim * ResolutionScale;
         BoxSize = default.BoxSize * ResolutionScale;
 
-        ActualMapRange = FMax(GameMinimap.MapRangeMax.X - GameMinimap.MapRangeMin.X,
-             GameMinimap.MapRangeMax.Y - GameMinimap.MapRangeMin.Y);
+        //Calculate map range values
+        ActualMapRange = FMax(  GameMinimap.MapRangeMax.X - GameMinimap.MapRangeMin.X,
+                            GameMinimap.MapRangeMax.Y - GameMinimap.MapRangeMin.Y);
 
+        //Calculate normalized player position
         PlayerPos.X = (PlayerOwner.Pawn.Location.Y - GameMinimap.MapCenter.Y) / ActualMapRange;
         PlayerPos.Y = (GameMinimap.MapCenter.X - PlayerOwner.Pawn.Location.X) / ActualMapRange;
 
-        ClampedPlayerPos.X = FClamp(   PlayerPos.X,
-                -0.5 + (TileSize / 2.0),
-                0.5 - (TileSize / 2.0));
+        //Calculate clamped player position
+        ClampedPlayerPos.X = FClamp(PlayerPos.X,-0.5 + (TileSize / 2.0),0.5 - (TileSize / 2.0));
+        ClampedPlayerPos.Y = FClamp(PlayerPos.Y,-0.5 + (TileSize / 2.0),0.5 - (TileSize / 2.0));
 
-        ClampedPlayerPos.Y = FClamp(   PlayerPos.Y,
-                -0.5 + (TileSize / 2.0),
-                0.5 - (TileSize / 2.0));
-
+        //Get north direction and player's heading
         TrueNorth = GameMinimap.GetRadianHeading();
         Playerheading = GetPlayerHeading();
 
+        //Calculate rotation values
         if(GameMinimap.bForwardAlwaysUp)
         {
             MapRotation = PlayerHeading;
@@ -346,91 +341,125 @@ function DrawMap()
             CompassRotation = MapRotation;
         }
 
+        //Calculate position for displaying the player in the map
         DisplayPlayerPos.X = VSize(PlayerPos) * Cos( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
         DisplayPlayerPos.Y = VSize(PlayerPos) * Sin( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
 
+        //Calculate player location after rotation
         RotPlayerPos.X = VSize(ClampedPlayerPos) * Cos( ATan2(ClampedPlayerPos.Y, ClampedPlayerPos.X) - MapRotation);
         RotPlayerPos.Y = VSize(ClampedPlayerPos) * Sin( ATan2(ClampedPlayerPos.Y, ClampedPlayerPos.X) - MapRotation);
 
+        //Calculate upper left UV coordinate
         StartPos.X = FClamp(RotPlayerPos.X + (0.5 - (TileSize / 2.0)),0.0,1.0 - TileSize);
         StartPos.Y = FClamp(RotPlayerPos.Y + (0.5 - (TileSize / 2.0)),0.0,1.0 - TileSize);
+        //StartPos.X = FClamp(DisplayPlayerPos.X + (0.5 - (TileSize / 2.0)),TileSize/-2,1.0 - TileSize/2);
+        //StartPos.Y = FClamp(DisplayPlayerPos.Y + (0.5 - (TileSize / 2.0)),TileSize/-2,1.0 - TileSize/2);
+
+        //Calculate texture panning for alpha
+        MapOffset.R =  FClamp(-1.0 * RotPlayerPos.X,-0.5 + (TileSize / 2.0),0.5 - (TileSize / 2.0));
+        MapOffset.G =  FClamp(-1.0 * RotPlayerPos.Y,-0.5 + (TileSize / 2.0),0.5 - (TileSize / 2.0));
+        //MapOffset.R =  FClamp(-1.0 * DisplayPlayerPos.X,-0.5,0.5);
+        //MapOffset.G =  FClamp(-1.0 * DisplayPlayerPos.Y,-0.5,0.5);
 
 
-        MapOffset.R =  FClamp(-1.0 * RotPlayerPos.X,
-              -0.5 + (TileSize / 2.0),
-              0.5 - (TileSize / 2.0));
-        MapOffset.G =  FClamp(-1.0 * RotPlayerPos.Y,
-              -0.5 + (TileSize / 2.0),
-              0.5 - (TileSize / 2.0));
+        //Cambiamos los valores al mapa, para ello creamos en tiempo real copias del material para que no de error
+        MatInst = new(self) Class'MaterialInstanceConstant';
+        MatInstCompassOverlay= new(self) Class'MaterialInstanceConstant';
 
-        MatInst = new(None) Class'MaterialInstanceConstant';
         MatInst.SetParent(GameMinimap.Minimap.GetMaterial());
+        MatInstCompassOverlay.SetParent(GameMinimap.CompassOverlay.GetMaterial());
+
+        MatInst.SetVectorParameterValue('MapOffset',MapOffset);
         MatInst.SetScalarParameterValue('MapRotation',MapRotation);
         MatInst.SetScalarParameterValue('TileSize',TileSize);
-        MatInst.SetVectorParameterValue('MapOffset',MapOffset);
+        MatInst.SetTextureParameterValue('BorderTex',Texture2D'CompassContent.map_border');
+        MatInst.SetTextureParameterValue('MinimapTex',Texture2D'Mapa1.Texture.mapa1Tex');
 
-        MatInstCompassOverlay= new(None) Class'MaterialInstanceConstant';
-        MatInstCompassOverlay.SetParent(GameMinimap.CompassOverlay.GetMaterial());
+        
+        MatInstCompassOverlay.SetTextureParameterValue('OverlayAlpha',Texture2D'CompassContent.map_border');
+        MatInstCompassOverlay.SetTextureParameterValue('OverlayTex',Texture2D'CompassContent.map_compass_border');
         MatInstCompassOverlay.SetScalarParameterValue('CompassRotation',CompassRotation);
-        //GameMinimap.CompassOverlay.SetScalarParameterValue('CompassRotation',CompassRotation);
+        
 
         GameMinimap.Minimap = MatInst;
         GameMinimap.CompassOverlay = MatInstCompassOverlay;
 
+        //Draw the map
         Canvas.SetPos(MapPosition.X,MapPosition.Y);
-        Canvas.DrawMaterialTile(GameMinimap.Minimap,
-                MapDim,
-                MapDim,
-                StartPos.X,
-                StartPos.Y,
-                TileSize,
-             TileSize );
+        Canvas.DrawMaterialTile(GameMinimap.Minimap,MapDim,MapDim,StartPos.X,StartPos.Y,TileSize,TileSize);
 
+        //Draw the player's location
         Canvas.SetPos(  MapPosition.X + MapDim * (((DisplayPlayerPos.X + 0.5) - StartPos.X) / TileSize) - (BoxSize / 2),
-                        MapPosition.Y + MapDim * (((DisplayPlayerPos.Y + 0.5) - StartPos.Y) / TileSize) - (BoxSize / 2));
-
-        Canvas.SetDrawColor(   PlayerColors[0].R,
-             PlayerColors[0].G,
-             PlayerColors[0].B,
-             PlayerColors[0].A);
+                    MapPosition.Y + MapDim * (((DisplayPlayerPos.Y + 0.5) - StartPos.Y) / TileSize) - (BoxSize / 2));
+        Canvas.SetDrawColor(PlayerColors[0].R,
+                        PlayerColors[0].G,
+                        PlayerColors[0].B,
+                        PlayerColors[0].A);
         Canvas.DrawBox(BoxSize,BoxSize);
 
-        /*
-        foreach WorldInfo.AllControllers(class'Controller',C)
-        {
-            if(PlayerController(C) != PlayerOwner)
-            {
-                PlayerPos.X = (C.Pawn.Location.Y - GameMinimap.MapCenter.Y) / ActualMapRange;
-                PlayerPos.Y = (GameMinimap.MapCenter.X - C.Pawn.Location.X) / ActualMapRange;
+        /*****************************
+        *  Draw Calabazas
+        *****************************/
 
+        foreach WorldInfo.AllPawns(class'CalabazaPawn',C)
+        {
+            if(C != PlayerOwner.Pawn)
+            {
+                //Calculate normalized player position
+                PlayerPos.Y = (GameMinimap.MapCenter.X - C.Location.X) / ActualMapRange;
+                PlayerPos.X = (C.Location.Y - GameMinimap.MapCenter.Y) / ActualMapRange;
+
+                //Calculate position for displaying the player in the map
                 DisplayPlayerPos.X = VSize(PlayerPos) * Cos( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
                 DisplayPlayerPos.Y = VSize(PlayerPos) * Sin( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
 
                 if(VSize(DisplayPlayerPos - RotPlayerPos) <= ((TileSize / 2.0) - (TileSize * Sqrt(2 * Square(BoxSize / 2)) / MapDim)))
                 {
-                    Canvas.SetPos(MapPosition.X + MapDim * (((DisplayPlayerPos.X + 0.5) - StartPos.X) / TileSize) - (BoxSize / 2),
-                                  MapPosition.Y + MapDim * (((DisplayPlayerPos.Y + 0.5) - StartPos.Y) / TileSize) - (BoxSize / 2));
-
-                    Canvas.SetDrawColor(   PlayerColors[0].R,
-                             PlayerColors[1].G,
-                             PlayerColors[1].B,
-                             PlayerColors[1].A);
-
+                    //Draw the player's location
+                    Canvas.SetPos(  MapPosition.X + MapDim * (((DisplayPlayerPos.X + 0.5) - StartPos.X) / TileSize) - (BoxSize / 2),
+                                MapPosition.Y + MapDim * (((DisplayPlayerPos.Y + 0.5) - StartPos.Y) / TileSize) - (BoxSize / 2));
+                    Canvas.SetDrawColor(PlayerColors[1].R,
+                                    PlayerColors[1].G,
+                                    PlayerColors[1].B,
+                                    PlayerColors[1].A);
                     Canvas.DrawBox(BoxSize,BoxSize);
                 }
             }
         }
-        */
 
+        //Draw the compass overlay
         Canvas.SetPos(MapPosition.X,MapPosition.Y);
         Canvas.DrawMaterialTile(GameMinimap.CompassOverlay,MapDim,MapDim,0.0,0.0,1.0,1.0);
     }
     else GameMinimap = DoorOfLiesGame(WorldInfo.Game).GameMinimap;
 }
 
+exec function MapSizeUp()
+{
+    MapDim *= 2;
+    BoxSize *= 2;
+}
+
+exec function MapSizeDown()
+{
+    MapDim /= 2;
+    BoxSize /= 2;
+}
+
+exec function MapZoomIn()
+{
+    TileSize = 1.0 / FClamp(Int((1.0 / TileSize) + 1.0) + 0.5,1.5,10.5);
+}
+
+exec function MapZoomOut()
+{
+    TileSize = 1.0 / FClamp(Int((1.0 / TileSize) - 1.0) + 0.5,1.5,10.5);
+}
+
 DefaultProperties
 {
     bDrawTraces = false;
+    bShowScores = false;
 
     MapDim=256
     BoxSize=12
@@ -438,6 +467,4 @@ DefaultProperties
     PlayerColors(1)=(R=96,G=255,B=96,A=255)
     TileSize=0.4
     MapPosition=(X=0.000000,Y=0.000000)
-
-    bShowScores = false;
 }

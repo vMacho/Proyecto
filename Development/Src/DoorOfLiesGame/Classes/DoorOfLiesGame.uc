@@ -17,11 +17,6 @@ function InitGame( string Options, out string ErrorMessage )
 	}
 }
 
-event Tick(float DeltaTime)
-{
-    super.Tick(DeltaTime);
-}
-
 DefaultProperties
 {
 	bDelayedStart=false

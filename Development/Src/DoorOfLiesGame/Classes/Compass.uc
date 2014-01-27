@@ -1,20 +1,8 @@
-class Compass extends actor 
-	placeable;
+class Compass extends actor placeable implements(ICompass);
 
-// Return the yaw of the actor
-function int GetYaw()
-{
-   return Rotation.Yaw;
-}
-
-function Rotator GetRotator()
-{
-   return Rotation;
-}
-
-function vector GetVectorizedRotator()
-{
-   return vector(Rotation);
+event PostBeginPlay()
+{                                                             
+ 	`log(GetRadianHeading()@GetDegreeHeading(),,'compass heading');
 }
 
 function float GetRadianHeading()
@@ -22,54 +10,66 @@ function float GetRadianHeading()
 	local Vector v;
 	local Rotator r;
 	local float f;
+ 
+	r.Yaw = rotation.Yaw;   // a
+	v = vector(r);          // b
 
-	r.Yaw = GetYaw();
-	v = vector(r);
-	f = GetHeadingAngle(v);
-	f = UnwindHeading(f);
+	f = GetHeadingAngle(v); // c
+	f = UnwindHeading(f);   // d
 
-	while (f < 0) f += PI * 2.0f;
+	while (f < 0)		    // e
+		f += PI * 2.0f;
+
+	return f;
+} 
+
+function float GetDegreeHeading()
+{
+	local float f;
+
+	f = GetRadianHeading();
+
+	f *= RadToDeg;
 
 	return f;
 }
 
-function float GetDegreeHeading()
+// Return the yaw of the actor
+function int GetYaw()
 {
-   local float f;
-
-   f = GetRadianHeading();
-
-   f *= RadToDeg;
-
-   return f;
+	return Rotation.Yaw;
+}
+					  
+function Rotator GetRotator()
+{
+	return Rotation;
 }
 
-event PostBeginPlay()
-{      
-   `log("===================================",,'UTBook');
-    `log("Compass Heading"@GetRadianHeading()@GetDegreeHeading(),,'UTBook');
-   `log("===================================",,'UTBook');
+function vector GetVectorizedRotator()
+{
+	return vector(Rotation);
 }
 
 DefaultProperties
 {
 	Begin Object Class=ArrowComponent Name=Arrow
-		ArrowColor = (B=80,G=80,R=200,A=255);
-		ArrowSize = 1.000000;
-		Name = "North Heading";
+		ArrowColor = (B=80,G=80,R=200,A=255)
+		ArrowSize = 1.000000
+		Name = "North Heading"
 	End Object
-	Components(0) = Arrow;
+	Components(0) = Arrow
 
 	Begin Object Class=SpriteComponent Name=Sprite 
-		Sprite=Texture2D'CompassContent.Compass';
-		HiddenGame = True;
-		AlwaysLoadOnClient = False;
-		AlwaysLoadOnServer = False;
+		Sprite=Texture2D'UTBookTextures.compass'
+		HiddenGame = True
+		AlwaysLoadOnClient = False
+		AlwaysLoadOnServer = False
+		Name  = "Sprite"
 	End Object
-	Components(1) = Sprite;
+	Components(1) = Sprite
 
-	bStatic = True;
-	bHidden = True;
-	bNoDelete = True;
-	bMovable  = False;
+	bStatic   = True
+	bHidden   = True
+	bNoDelete = True
+	bMovable  = False
 }

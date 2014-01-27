@@ -24,7 +24,6 @@ simulated event PostBeginPlay() //Al empezar
     super.PostBeginPlay();
 
     maxCalabazas = DoorOfLiesGame(WorldInfo.Game).MaxCalabazasPlayer;
-    `Log(maxCalabazas);
 }
 
 simulated function name GetDefaultCameraMode( PlayerController RequestedBy ) // Tipo de camara por defecto
@@ -103,7 +102,6 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
         Other.destroy();
         calabazas.AddItem(calabaza);
 
-        `Log("COJO CALABAZA --> Total: "$calabazas.length);
         PlaySound(SoundCue'KismetGame_Assets.Sounds.S_Blast_05_Cue');
     }
 }
