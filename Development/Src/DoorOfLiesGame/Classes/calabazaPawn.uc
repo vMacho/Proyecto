@@ -68,4 +68,7 @@ DefaultProperties
     speed = 2;
     speedRotator = 20;
     amplitude = 0.5;
+
+    bCollideActors = true;
+    bBlockActors = false;
 }

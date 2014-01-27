@@ -22,12 +22,13 @@ enum EAnimState
 simulated event PostBeginPlay() //Al empezar
 {
     super.PostBeginPlay();
-    `Log("Custom Pawn up");
+
+    maxCalabazas = DoorOfLiesGame(WorldInfo.Game).MaxCalabazasPlayer;
+    `Log(maxCalabazas);
 }
 
 simulated function name GetDefaultCameraMode( PlayerController RequestedBy ) // Tipo de camara por defecto
 {
-    `Log("Requested Isometric");
     return 'Isometric';
 }
 
@@ -141,7 +142,7 @@ defaultproperties
     CollisionType=COLLIDE_BlockAll
     Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
     CollisionRadius=+0021.000000
-    CollisionHeight=+0048.000000
+    //CollisionHeight=+0048.000000
     End Object
     CylinderComponent=CollisionCylinder
 
@@ -170,10 +171,8 @@ defaultproperties
     bCanJump=false
 
     bCollideActors = true;
-    bBlockActors = false;
+    bBlockActors = true;
 
     Tag = "Player";
-
-    maxCalabazas = 2;
 }
 

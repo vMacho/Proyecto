@@ -50,126 +50,129 @@ event PostRender()
     local int TeamIndex;
     local LocalPlayer Lp;
 
-    RenderDelta = WorldInfo.TimeSeconds - LastHUDRenderTime;
-    LastHUDRenderTime = WorldInfo.TimeSeconds;
-
-    bIsSplitscreen = class'Engine'.static.IsSplitScreen();
-
-    ResolutionScaleX = Canvas.ClipX/1024;
-    ResolutionScale = Canvas.ClipY/768;
-    if ( bIsSplitScreen )
-        ResolutionScale *= 2.0;
-
-    if ( (ViewX != Canvas.ClipX) || (ViewY != Canvas.ClipY) )
+    if(bShowHUD)
     {
-        ResolutionChanged();
-        ViewX = Canvas.ClipX;
-        ViewY = Canvas.ClipY;
-    }
-    UTGRI = UTGameReplicationInfo(WorldInfo.GRI);
+        RenderDelta = WorldInfo.TimeSeconds - LastHUDRenderTime;
+        LastHUDRenderTime = WorldInfo.TimeSeconds;
 
-    if ( ScoreboardMovie != None && ScoreboardMovie.bMovieIsOpen )
-    {
-        ScoreboardMovie.Tick(RenderDelta);
-    }
+        bIsSplitscreen = class'Engine'.static.IsSplitScreen();
 
-    if (LeaderboardMovie != none && LeaderboardMovie.bMovieIsOpen)
-        LeaderboardMovie.Tick(RenderDelta);
+        ResolutionScaleX = Canvas.ClipX/1024;
+        ResolutionScale = Canvas.ClipY/768;
+        if ( bIsSplitScreen )
+            ResolutionScale *= 2.0;
 
-    LP = LocalPlayer(PlayerOwner.Player);
-    bIsFirstPlayer = (LP != none) && (LP.Outer.GamePlayers[0] == LP);
-
-    // Clear the flag
-    bHudMessageRendered = false;
-
-
-    PawnOwner = Pawn(PlayerOwner.ViewTarget);
-    if ( PawnOwner == None )
-    {
-        PawnOwner = PlayerOwner.Pawn;
-    }
-
-    UTPawnOwner = UTPawn(PawnOwner);
-    if ( UTPawnOwner == none )
-    {
-        if ( UDKVehicleBase(PawnOwner) != none )
+        if ( (ViewX != Canvas.ClipX) || (ViewY != Canvas.ClipY) )
         {
-            UTPawnOwner = UTPawn( UDKVehicleBase(PawnOwner).Driver);
+            ResolutionChanged();
+            ViewX = Canvas.ClipX;
+            ViewY = Canvas.ClipY;
         }
-    }
+        UTGRI = UTGameReplicationInfo(WorldInfo.GRI);
 
-
-    // draw any debug text in real-time
-    PlayerOwner.DrawDebugTextList(Canvas,RenderDelta);
-
-    // Cache the current Team Index of this hud and the GRI
-    TeamIndex = 2;
-    if ( PawnOwner != None )
-    {
-        if ( (PawnOwner.PlayerReplicationInfo != None) && (PawnOwner.PlayerReplicationInfo.Team != None) )
+        if ( ScoreboardMovie != None && ScoreboardMovie.bMovieIsOpen )
         {
-            TeamIndex = PawnOwner.PlayerReplicationInfo.Team.TeamIndex;
+            ScoreboardMovie.Tick(RenderDelta);
         }
-    }
-    else if ( (PlayerOwner.PlayerReplicationInfo != None) && (PlayerOwner.PlayerReplicationInfo.team != None) )
-    {
-        TeamIndex = PlayerOwner.PlayerReplicationInfo.Team.TeamIndex;
-    }
 
-    HUDScaleX = Canvas.ClipX/1280;
-    HUDScaleY = Canvas.ClipX/1280;
+        if (LeaderboardMovie != none && LeaderboardMovie.bMovieIsOpen)
+            LeaderboardMovie.Tick(RenderDelta);
 
-    GetTeamColor(TeamIndex, TeamHUDColor, TeamTextColor);
+        LP = LocalPlayer(PlayerOwner.Player);
+        bIsFirstPlayer = (LP != none) && (LP.Outer.GamePlayers[0] == LP);
 
-    FullWidth = Canvas.ClipX;
-    FullHeight = Canvas.ClipY;
-
-    // Always update the Damage Indicator
-    UpdateDamage();
-
-    // let iphone draw any always present overlays
-
-    if (bShowMobileHud)
-    {
-        DrawInputZoneOverlays();
-    }
-
-    RenderMobileMenu();
+        // Clear the flag
+        bHudMessageRendered = false;
 
 
+        PawnOwner = Pawn(PlayerOwner.ViewTarget);
+        if ( PawnOwner == None )
+        {
+            PawnOwner = PlayerOwner.Pawn;
+        }
 
-    IsoPlayerController = DoorOfLiesPlayerController(PlayerOwner); // Cast de la clase playerController para obtener el jugador
-    IsoPlayerController.PlayerMouse = GetMouseCoordinates(); // Obtenemos las coordenadas del raton 2D
-    IsoPlayerController.PlayerMouse = AjustResolutionCoordinate(IsoPlayerController.PlayerMouse);
+        UTPawnOwner = UTPawn(PawnOwner);
+        if ( UTPawnOwner == none )
+        {
+            if ( UDKVehicleBase(PawnOwner) != none )
+            {
+                UTPawnOwner = UTPawn( UDKVehicleBase(PawnOwner).Driver);
+            }
+        }
 
-    //Proyectamos las coordenadas 2D en el plano 3D en la variable MousePosWorldNormal
-    Canvas.DeProject(IsoPlayerController.PlayerMouse, IsoPlayerController.MousePosWorldLocation, IsoPlayerController.MousePosWorldNormal);
 
-    PlayerCam = DoorOfLiesPlayerCamera(IsoPlayerController.PlayerCamera); //Obtenemos la camara con cast
+        // draw any debug text in real-time
+        PlayerOwner.DrawDebugTextList(Canvas,RenderDelta);
 
-    //Calculate a trace from Player camera + 100 up(z) in direction of deprojected MousePosWorldNormal (the direction of the mouse).
-    //-----------------
-    IsoPlayerController.RayDir = IsoPlayerController.MousePosWorldNormal; //Colocamos la direccion del rayo segun la posicion del raton
-    //Start the trace at the player camera (isometric) + 100 unit z and a little offset in front of the camera (direction *10)
-    IsoPlayerController.StartTrace = (PlayerCam.ViewTarget.POV.Location + vect(0,0,100)) + IsoPlayerController.RayDir * 10;
-    //End this ray at start + the direction multiplied by given distance (5000 unit is far enough generally)
-    IsoPlayerController.EndTrace = IsoPlayerController.StartTrace + IsoPlayerController.RayDir * 5000;
+        // Cache the current Team Index of this hud and the GRI
+        TeamIndex = 2;
+        if ( PawnOwner != None )
+        {
+            if ( (PawnOwner.PlayerReplicationInfo != None) && (PawnOwner.PlayerReplicationInfo.Team != None) )
+            {
+                TeamIndex = PawnOwner.PlayerReplicationInfo.Team.TeamIndex;
+            }
+        }
+        else if ( (PlayerOwner.PlayerReplicationInfo != None) && (PlayerOwner.PlayerReplicationInfo.team != None) )
+        {
+            TeamIndex = PlayerOwner.PlayerReplicationInfo.Team.TeamIndex;
+        }
 
-    //Trace MouseHitWorldLocation each frame to world location (here you can get from the trace the actors that are hit by the trace, for the sake of this
-    //simple tutorial, we do noting with the result, but if you would filter clicks only on terrain, or if the player clicks on an npc, you would want to inspect
-    //the object hit in the StartFire function
-    IsoPlayerController.TraceActor = Trace(IsoPlayerController.MouseHitWorldLocation, IsoPlayerController.MouseHitWorldNormal, IsoPlayerController.EndTrace, IsoPlayerController.StartTrace, true);
-    
-    //Calculate the pawn eye location for debug ray and for checking obstacles on click.
-    IsoPlayerController.PawnEyeLocation = Pawn(PlayerOwner.ViewTarget).Location + Pawn(PlayerOwner.ViewTarget).EyeHeight * vect(0,0,1);
+        HUDScaleX = Canvas.ClipX/1280;
+        HUDScaleY = Canvas.ClipX/1280;
 
-    DrawHUD(); //Rutina de dibujado normal
+        GetTeamColor(TeamIndex, TeamHUDColor, TeamTextColor);
 
-    if(bDrawTraces) //Si bDrawTraces == true se dibujan los rayos de la camara
-    {
-        //If display is enabled from console, then draw Pathfinding routes and rays.
-        super.DrawRoute(Pawn(PlayerOwner.ViewTarget));
-        DrawTraceDebugRays();
+        FullWidth = Canvas.ClipX;
+        FullHeight = Canvas.ClipY;
+
+        // Always update the Damage Indicator
+        UpdateDamage();
+
+        // let iphone draw any always present overlays
+
+        if (bShowMobileHud)
+        {
+            DrawInputZoneOverlays();
+        }
+
+        RenderMobileMenu();
+
+
+
+        IsoPlayerController = DoorOfLiesPlayerController(PlayerOwner); // Cast de la clase playerController para obtener el jugador
+        IsoPlayerController.PlayerMouse = GetMouseCoordinates(); // Obtenemos las coordenadas del raton 2D
+        IsoPlayerController.PlayerMouse = AjustResolutionCoordinate(IsoPlayerController.PlayerMouse);
+
+        //Proyectamos las coordenadas 2D en el plano 3D en la variable MousePosWorldNormal
+        Canvas.DeProject(IsoPlayerController.PlayerMouse, IsoPlayerController.MousePosWorldLocation, IsoPlayerController.MousePosWorldNormal);
+
+        PlayerCam = DoorOfLiesPlayerCamera(IsoPlayerController.PlayerCamera); //Obtenemos la camara con cast
+
+        //Calculate a trace from Player camera + 100 up(z) in direction of deprojected MousePosWorldNormal (the direction of the mouse).
+        //-----------------
+        IsoPlayerController.RayDir = IsoPlayerController.MousePosWorldNormal; //Colocamos la direccion del rayo segun la posicion del raton
+        //Start the trace at the player camera (isometric) + 100 unit z and a little offset in front of the camera (direction *10)
+        IsoPlayerController.StartTrace = (PlayerCam.ViewTarget.POV.Location + vect(0,0,100)) + IsoPlayerController.RayDir * 10;
+        //End this ray at start + the direction multiplied by given distance (5000 unit is far enough generally)
+        IsoPlayerController.EndTrace = IsoPlayerController.StartTrace + IsoPlayerController.RayDir * 5000;
+
+        //Trace MouseHitWorldLocation each frame to world location (here you can get from the trace the actors that are hit by the trace, for the sake of this
+        //simple tutorial, we do noting with the result, but if you would filter clicks only on terrain, or if the player clicks on an npc, you would want to inspect
+        //the object hit in the StartFire function
+        IsoPlayerController.TraceActor = Trace(IsoPlayerController.MouseHitWorldLocation, IsoPlayerController.MouseHitWorldNormal, IsoPlayerController.EndTrace, IsoPlayerController.StartTrace, true);
+        
+        //Calculate the pawn eye location for debug ray and for checking obstacles on click.
+        IsoPlayerController.PawnEyeLocation = Pawn(PlayerOwner.ViewTarget).Location + Pawn(PlayerOwner.ViewTarget).EyeHeight * vect(0,0,1);
+
+        DrawHUD(); //Rutina de dibujado normal
+
+        if(bDrawTraces) //Si bDrawTraces == true se dibujan los rayos de la camara
+        {
+            //If display is enabled from console, then draw Pathfinding routes and rays.
+            super.DrawRoute(Pawn(PlayerOwner.ViewTarget));
+            DrawTraceDebugRays();
+        }
     }
 }
 
@@ -259,7 +262,7 @@ function DrawHUD()
         Canvas.DrawText( StringMessage, false, , , TextRenderInfo );
     }
 
-    DrawMap(); //COMPROBAR DIVISION POR CERO
+    if(!MyHudHealth.IsGamePaused) DrawMap(); //COMPROBAR DIVISION POR CERO
 }
 
 function PreCalcValues()

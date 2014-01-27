@@ -14,6 +14,7 @@ event bool Start(optional bool StartPaused = false) //Constructor
 {
 	super.Start(StartPaused);
 	Advance(0);
+	SetTimingMode(TM_Real);
 
 	return true;
 }
@@ -61,16 +62,25 @@ function PauseGameControl(bool mode)
 	IsGamePaused = mode;
 
 	PlayerController = GetPC();
-	PlayerController.SetPause(mode);
+	PlayerController.SetPause(IsGamePaused);
+
 }
 
 function PauseGameControlPlayer()
 {
 	local PlayerController PlayerController;
+
+	ActionScriptVoid("_root._btnPause.PauseGame");
+
 	IsGamePaused = !IsGamePaused;
 
 	PlayerController = GetPC();
 	PlayerController.SetPause(IsGamePaused);
+}
+
+function MainMenu()
+{
+	ConsoleCommand("open MainMenu");
 }
 
 function vector2d GetMouseCoordinates()

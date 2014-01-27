@@ -2,7 +2,8 @@ class DoorOfLiesGame extends GameInfo
 					 config(DoorOfLiesGame);
 
 var MU_Minimap GameMinimap;
-var int MaxCalabazas;
+var globalconfig int MaxCalabazas;
+var globalconfig int MaxCalabazasPlayer;
 
 function InitGame( string Options, out string ErrorMessage )
 {
@@ -14,13 +15,13 @@ function InitGame( string Options, out string ErrorMessage )
 		GameMinimap = ThisMinimap;
 		break;
 	}
+
+	`Log("MAX C" $ MaxCalabazas $ " MAX P" $ MaxCalabazasPlayer);
 }
 
 event Tick(float DeltaTime)
 {
     super.Tick(DeltaTime);
-
-    `Log("MaxCalabazas "$MaxCalabazas);
 }
 
 DefaultProperties

@@ -23,20 +23,27 @@
 				
 		override public function ControlaClick(event:TimerEvent):void
 		{			
+			PauseGame();
+			
+			ExternalInterface.call("PauseGameControl", mode);
+		}
+		
+		public function PauseGame()
+		{
 			if(!mode)
 			{
 				SetLabel("Resume");
 				MovieClip(parent).getChildByName("_HUDHealth").visible = mode;
+				MovieClip(parent).getChildByName("_btnMainMenu").visible = !mode;
 			}
 			else
 			{
 				SetLabel("Pause");
 				MovieClip(parent).getChildByName("_HUDHealth").visible = mode;
+				MovieClip(parent).getChildByName("_btnMainMenu").visible = !mode;
 			}
 			
 			mode = !mode;
-			
-			ExternalInterface.call("PauseGameControl", mode);
 		}
 	}
 	

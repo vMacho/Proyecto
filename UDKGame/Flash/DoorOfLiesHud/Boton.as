@@ -17,7 +17,8 @@
         private var labelText:String = "Boton";
 		private var espera:Timer;
 		
-		public function Boton() {
+		public function Boton() 
+		{
 			addEventListener(MouseEvent.CLICK, OnClick);
 			ConfigureLabel();
 		}
@@ -43,9 +44,10 @@
             format.font = "Trajan Pro 3";
             format.color = 000;
             format.size = 93;
-
+			
             label.defaultTextFormat = format;
-            addChild(label);
+			label.embedFonts = true;
+			addChild(label);
         }
 		
 		public function ChangeFormat(format:TextFormat) : void

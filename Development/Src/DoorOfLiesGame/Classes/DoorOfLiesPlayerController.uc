@@ -148,16 +148,6 @@ exec function PrevWeapon() //Scroll de la camara
 	PlayerCamera.FreeCamDistance -= (PlayerCamera.FreeCamDistance > 128) ? 64 : 0;
 }
 
-exec function StrafeLeft()
-{
-	`Log("Hability 1");
-}
-
-function ActivateHability1()
-{
-	`Log("Hability 1");
-}
-
 
 /******************************************************************
  *
@@ -171,25 +161,24 @@ function ActivateHability1()
  ******************************************************************/
 exec function StartFire(optional byte FireModeNum)
 {
-	//Pop all states to get pawn in auto moving to mouse target location.
-	PopState(true);
-	
-	//Set timer
-	DeltaTimeAccumulated =0;
+	if(myHUD.bShowHUD)
+	{
+		//Pop all states to get pawn in auto moving to mouse target location.
+		PopState(true);
+		
+		//Set timer
+		DeltaTimeAccumulated =0;
 
-	//Set initial location of destination
-	SetDestinationPosition(MouseHitWorldLocation);
+		//Set initial location of destination
+		SetDestinationPosition(MouseHitWorldLocation);
 
-	//Initialize this to false, so we can at least do one state-frame and evaluate distance again.
-	bPawnNearDestination = false;
+		//Initialize this to false, so we can at least do one state-frame and evaluate distance again.
+		bPawnNearDestination = false;
 
-	//Initialize mouse pressed over time.
-	bLeftMousePressed = FireModeNum == 0;
-	bRightMousePressed = FireModeNum == 1;
-
-	//comment these if not needed
-	/*if(bLeftMousePressed) `Log("Left Mouse pressed");
-	if(bRightMousePressed) `Log("Right Mouse pressed");*/
+		//Initialize mouse pressed over time.
+		bLeftMousePressed = FireModeNum == 0;
+		bRightMousePressed = FireModeNum == 1;
+	}
 }
 
 /******************************************************************
@@ -208,43 +197,47 @@ exec function StartFire(optional byte FireModeNum)
 simulated function StopFire(optional byte FireModeNum )
 {
 	//`Log("delta accumulated"@DeltaTimeAccumulated);
-	//Un-Initialize mouse pressed over time.
-	if(bLeftMousePressed && FireModeNum == 0)
+
+	if(myHUD.bShowHUD)
 	{
-		bLeftMousePressed = false;
-		//`Log("Left Mouse released");
-	}
-	if(bRightMousePressed && FireModeNum == 1)
-	{
-		bRightMousePressed = false;
-		//`Log("Right Mouse released");
-	
-		//If we are not near destination and click occured
-		if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+		//Un-Initialize mouse pressed over time.
+		if(bLeftMousePressed && FireModeNum == 0)
 		{
-			//Our pawn has been ordered to a single location on mouse release.
-			//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-			if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true))
+			bLeftMousePressed = false;
+			//`Log("Left Mouse released");
+		}
+		if(bRightMousePressed && FireModeNum == 1)
+		{
+			bRightMousePressed = false;
+			//`Log("Right Mouse released");
+		
+			//If we are not near destination and click occured
+			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
 			{
-				//Simply move to destination.
-				MovePawnToDestination();
+				//Our pawn has been ordered to a single location on mouse release.
+				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true))
+				{
+					//Simply move to destination.
+					MovePawnToDestination();
+				}
+				else
+				{
+					//fire up pathfinding
+					//ExecutePathFindMove();
+				}
 			}
 			else
 			{
-				//fire up pathfinding
-				//ExecutePathFindMove();
+				//Stop player from going on in that direction forever. This normally needs to be done
+				//after a long mouse held. This will make the player stop its current MoveMousePressedAndHold
+				//state.
+				PopState();
 			}
 		}
-		else
-		{
-			//Stop player from going on in that direction forever. This normally needs to be done
-			//after a long mouse held. This will make the player stop its current MoveMousePressedAndHold
-			//state.
-			PopState();
-		}
+		//reset accumulated timer for mouse held button
+		DeltaTimeAccumulated = 0;
 	}
-	//reset accumulated timer for mouse held button
-	DeltaTimeAccumulated = 0;
 }
 
 /******************************************************************
@@ -447,7 +440,6 @@ simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, in
 
 exec function PauseGame()
 {
-	`Log("PULSADO ESC");
   	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
