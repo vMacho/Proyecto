@@ -52,17 +52,15 @@ DefaultProperties
 
     Begin Object Class=StaticMeshComponent Name=CalabazaMesh
         LightEnvironment=MyLightEnvironment;
-        StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'       
+        StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'
+        Scale = 10   
     End Object
-    //HitComponent=CalabazaMesh
     Components.Add(CalabazaMesh)
  
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow
-        Template = ParticleSystem'HumoGato.EjemploParticulas';
+        Template = ParticleSystem'ParticlePumpkin.Particles.ParticlePumpkin'
     End Object
     Components.Add(ParticlesFollow)
-
-    DrawScale = 10; //Scale del Mesh
     
     life = 5;
     speed = 2;

@@ -12,7 +12,7 @@ var (Base) int calabazas;
 var (Base) int calabazasWin;
 var (Base) Name tagPlayer;
 var (Base) StaticMeshComponent contador;
-var ContadorHud _contadorHUD;
+var OrcScore _contadorHUD;
  
 simulated event PostBeginPlay()
 {
@@ -27,7 +27,7 @@ simulated event PostBeginPlay()
     
     contador.SetMaterial(0, Material'cotadorMaterial.Material.cotadorMaterial');
 
-    _contadorHUD = new class'ContadorHud';
+    _contadorHUD = new class'OrcScore';
     _contadorHUD.Start();
     _contadorHUD.UpdateContador(calabazas);
 }
@@ -59,10 +59,7 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
             _contadorHUD.UpdateContador(calabazas);
 
-            if(calabazas <= 0)
-            {
-                TriggerGlobalEventClass(class'SeqEvent_FinishLevel',none);
-            }
+            if(calabazas <= 0) TriggerGlobalEventClass(class'SeqEvent_FinishLevel',none);
         }
     }
 }

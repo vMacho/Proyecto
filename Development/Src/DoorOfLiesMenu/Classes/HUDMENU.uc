@@ -3,10 +3,9 @@
 Posicion del raton y debug de variables
  */
 
-class HUDMENU extends UTHUD;
+class HUDMenu extends HUD;
 
 var DoorOfLiesHudMenu MyHudMenu;
-
 
 simulated event PostBeginPlay() //Al empezar
 {
@@ -24,7 +23,7 @@ function PreCalcValues()
     if(MyHudMenu != none)
     {
         MyHudMenu.SetViewport(0,0,SizeX, SizeY);
-        MyHudMenu.SetViewScaleMode(SM_NoScale);
+        MyHudMenu.SetViewScaleMode(SM_ShowAll);
         MyHudMenu.SetAlignment(Align_TopLeft);
     }
 }

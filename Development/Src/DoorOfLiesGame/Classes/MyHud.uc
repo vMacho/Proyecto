@@ -395,6 +395,7 @@ function DrawMap()
              PlayerColors[0].A);
         Canvas.DrawBox(BoxSize,BoxSize);
 
+        /*
         foreach WorldInfo.AllControllers(class'Controller',C)
         {
             if(PlayerController(C) != PlayerOwner)
@@ -419,6 +420,7 @@ function DrawMap()
                 }
             }
         }
+        */
 
         Canvas.SetPos(MapPosition.X,MapPosition.Y);
         Canvas.DrawMaterialTile(GameMinimap.CompassOverlay,MapDim,MapDim,0.0,0.0,1.0,1.0);
