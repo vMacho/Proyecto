@@ -28,9 +28,10 @@
             format.font = "Trajan Pro 3";
             format.color = 000;
             format.size = 93;
-
+			
             label.defaultTextFormat = format;
-            addChild(label);
+			label.embedFonts = true;
+			addChild(label);
         }
 		
 		override public function ControlaClick(event:TimerEvent):void

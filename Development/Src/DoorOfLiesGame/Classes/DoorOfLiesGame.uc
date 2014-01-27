@@ -15,8 +15,6 @@ function InitGame( string Options, out string ErrorMessage )
 		GameMinimap = ThisMinimap;
 		break;
 	}
-
-	`Log("MAX C" $ MaxCalabazas $ " MAX P" $ MaxCalabazasPlayer);
 }
 
 event Tick(float DeltaTime)

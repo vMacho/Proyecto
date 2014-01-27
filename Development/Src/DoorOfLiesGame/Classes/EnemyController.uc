@@ -3,10 +3,17 @@ class EnemyController extends AIController;
 var Actor target;
 var Vector TempDest;
  
+simulated event PostBeginPlay()
+{
+    super.PostBeginPlay();
+    `Log("Enemy is alive !");
+}
+
 event Possess(Pawn inPawn, bool bVehicleTransition)
 {
-    super.Possess(inPawn, bVehicleTransition); Pawn.SetMovementPhysics();
-} //I'm adding an default idle state so the Pawn doesn't try to follow a player that doesn' exist yet.
+    super.Possess(inPawn, bVehicleTransition); 
+    Pawn.SetMovementPhysics();
+}
  
 auto state Idle
 {
@@ -14,15 +21,16 @@ auto state Idle
     {
         super.SeePlayer(Seen);
         target = Seen;
-         
+        
         GotoState('Follow');
     }
-Begin:
+    Begin:
 }
- 
+
 state Follow
 {
     ignores SeePlayer;
+
     function bool FindNavMeshPath()
     {
         // Clear cache and constraints (ignore recycling for the moment)
@@ -42,14 +50,13 @@ Begin:
     {
         //FlushPersistentDebugLines();
  
-        //Direct move
-        MoveToward( target,target );
+        MoveToward( target,target ); //Direct move
     }
     else if( FindNavMeshPath() )
     {
         NavigationHandle.SetFinalDestination(target.Location);
         //FlushPersistentDebugLines();
-        //NavigationHandle.DrawPathCache(,TRUE);
+        NavigationHandle.DrawPathCache(,TRUE);
  
         // move to the first node on the path
         if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) )
@@ -60,11 +67,7 @@ Begin:
             MoveTo( TempDest, target );
         }
     }
-    else
-    {
-        //We can't follow, so get the hell out of this state, otherwise we'll enter an infinite loop.
-        GotoState('Idle');
-    }
+    else GotoState('Idle'); //No podemos seguirle volvemos al estado Idle
  
     goto 'Begin';
 }

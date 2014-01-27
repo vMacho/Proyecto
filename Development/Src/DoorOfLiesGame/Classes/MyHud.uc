@@ -6,7 +6,6 @@ Posicion del raton y debug de variables
 class MyHud extends UTHUD;
 
 var bool    bDrawTraces;    //Dibuja o no los rayos en el debug
-//var FontRenderInfo  TextRenderInfo;         //letra para poner en el debug de texto
 var DoorOfLiesHud MyHudHealth;
 
 var MU_Minimap GameMinimap;

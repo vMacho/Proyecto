@@ -19,7 +19,7 @@
 				
 		override public function ControlaClick(event:TimerEvent):void
 		{
-			ExternalInterface.call("StartGameControll");
+			ExternalInterface.call("StartGame");
 		}
 	}
 	

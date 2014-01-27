@@ -7,7 +7,6 @@ class EnemyPawn extends Pawn
   ClassGroup(EnemyPumpkin)
   placeable;
    
-var(EnemyPumpkin) SkeletalMeshComponent NPCMesh;
 var(EnemyPumpkin) class<AIController> NPCController;
 
 function AddDefaultInventory()
@@ -31,10 +30,10 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 DefaultProperties
 {
     Begin Object Name=CollisionCylinder
-        CollisionHeight=+44.000000
+        CollisionHeight =+ 44.000000
     End Object
  
-    Begin Object Class=SkeletalMeshComponent Name=GatoSkeletalMesh
+    Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
         //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
         SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc';
         AnimTreeTemplate=AnimTree'Orco.AnimTree';
@@ -42,11 +41,8 @@ DefaultProperties
         HiddenGame=FALSE
         HiddenEditor=FALSE
     End Object
-    Mesh=GatoSkeletalMesh
-    Components.Add(GatoSkeletalMesh)
-
-    ControllerClass=class'GatoBot'
-    //InventoryManagerClass=class'SandboxInventoryManager'
+    Mesh=EnemySkeletalMesh
+    Components.Add(EnemySkeletalMesh)
  
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow
         Template = ParticleSystem'HumoGato.EjemploParticulas';
@@ -56,6 +52,7 @@ DefaultProperties
     bJumpCapable=false
     bCanJump=false
  
-    GroundSpeed=150.0 //Making the bot slower than the player
-    DrawScale = 1.5; //Scale del Mesh
+    GroundSpeed=150.0 //Para hacerlo mas lento que el player
+    DrawScale = 1.5;
+    ControllerClass=class'EnemyController'
 }

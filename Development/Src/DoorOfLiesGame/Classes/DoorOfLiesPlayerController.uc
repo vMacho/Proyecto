@@ -48,11 +48,11 @@ var bool        bPawnNearDestination;       //This indicates if pawn is within a
 var vector targetTogo;
 
 var (DoorOfLies) float RotationSpeed;
+var PointerActor PointerCursor;
 
 simulated event PostBeginPlay()
 {
 	super.PostBeginPlay();
-	`Log("I am alive !");
 }
 
 function UpdateRotation( float DeltaTime ) //Truncamos la rotacion
@@ -71,17 +71,11 @@ event PlayerTick( float DeltaTime )
 {
 	super.PlayerTick(DeltaTime);
 
-	//Comocamos en la posicion el cursor 3D, en este caso no usamos.
-	//MouseCursor.SetLocation(MouseHitWorldLocation);	
-
-	//Usamos el boton derecho para movernos
-	if(bRightMousePressed)
+	if(bRightMousePressed) //Usamos el boton derecho para movernos
 	{
-		//Guardamos el tiempo que dicho boton ha estado pulsado
-		DeltaTimeAccumulated += DeltaTime;
+		DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que dicho boton ha estado pulsado
 
-		//Actualizamos la posicion mientras el boton siga presionado
-		SetDestinationPosition(MouseHitWorldLocation);
+		SetDestinationPosition(MouseHitWorldLocation); //Actualizamos la posicion mientras el boton siga presionado
 		
 		//If its not already pushed, push the state that makes the pawn run to destination
 		//until mouse is unpressed. Make sure we do it after the allocated time for a single
@@ -103,40 +97,35 @@ event PlayerTick( float DeltaTime )
 		}
 	}
 
-	//Usamos el boton derecho para atacar, si pulsamos sobre un enemigo primero va hasta su posicion
-	if(bLeftMousePressed)
+	if(bLeftMousePressed) //Usamos el boton Izquierdo para atacar, si pulsamos sobre un enemigo primero va hasta su posicion
 	{
-		//Guardamos el tiempo que dicho boton ha estado pulsado
-		DeltaTimeAccumulated += DeltaTime;
+		DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que dicho boton ha estado pulsado
 		
 		//BUSCAMOS EL TARGET
 		//targetTogo = none;
 		//if(targetTogo != none)
 		//{
-			DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-			targetTogo = Pawn.Location;
-			//SetDestinationPosition(targetTogo);
+			SetDestinationPosition(MouseHitWorldLocation);
 
-			if(DeltaTimeAccumulated >= 0.13f)
+			if(DeltaTimeAccumulated >= 0.13f) //Si Mantenemos pulsado
 			{
-				if(!IsInState('AttackEnemy'))
+				if(!IsInState('AttackEnemy')) //Si no estabamos atacando
 				{
 					`Log("Pushed AttackEnemy state");
 					PushState('AttackEnemy');
 				}
-				else
-				{
-					//Specify execution of current state, starting from label Begin:, ignoring all events and
-					//keeping our current pushed state MoveMousePressedAndHold. To better understand why this 
-					//continually execute each frame from our Begin: label
-					GotoState('AttackEnemy', 'Begin', false, true);
-				}
+				else GotoState('AttackEnemy', 'Begin', false, true);
 			}
 		//}
 
 	}
 
 	//DumpStateStack();
+}
+
+exec function PauseGame()
+{
+  	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
 exec function NextWeapon() //Scroll de la camara
@@ -149,16 +138,7 @@ exec function PrevWeapon() //Scroll de la camara
 }
 
 
-/******************************************************************
- *
- *  TUTORIAL FUNCTION
- *
- *  StartFire is called on mouse pressed, here to calculate a mouse click we
- *  set the timer to 0, then initialize mouseButtons according to function 
- *  parameter and set the initial destination of the mouse press. Real
- *  process is in PlayerTick function.
- *
- ******************************************************************/
+//Se lanza cuando pulsamos un boton del ratón y da el destino al que dirigirse
 exec function StartFire(optional byte FireModeNum)
 {
 	if(myHUD.bShowHUD)
@@ -181,95 +161,71 @@ exec function StartFire(optional byte FireModeNum)
 	}
 }
 
-/******************************************************************
- *
- *  TUTORIAL FUNCTION
- *
- *  StopFire is called on mouse release, here check the time the buttons have
- *  been pressed (this should be enhanced, but it was kept simple for the tutorial).
- *  if DeltaAccumulated < 0.1300 (medium time mouse click) then we calculate it as
- *  a mouse click, else simply stop any state running. EDIT: You must understand only
- *  a single timer has been kept for all mouse button, you should duplicate a timer
- *  for each individual mouse button if you want to support thing like auto-fire while
- *  walking in a direction.
- *
- ******************************************************************/
+//Relase del boton del ratón, mandamos al jugador al punto de destino
 simulated function StopFire(optional byte FireModeNum )
 {
 	//`Log("delta accumulated"@DeltaTimeAccumulated);
 
 	if(myHUD.bShowHUD)
 	{
-		//Un-Initialize mouse pressed over time.
+		//Reseteamos el tiempo de pulsado de los botones del ratón
 		if(bLeftMousePressed && FireModeNum == 0)
 		{
 			bLeftMousePressed = false;
-			//`Log("Left Mouse released");
-		}
-		if(bRightMousePressed && FireModeNum == 1)
-		{
-			bRightMousePressed = false;
-			//`Log("Right Mouse released");
 		
-			//If we are not near destination and click occured
+			//Si no estamos cerca del destino y hemos pulsado el botón Izquierdo del ratón
 			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
 			{
 				//Our pawn has been ordered to a single location on mouse release.
 				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
 				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true))
 				{
-					//Simply move to destination.
-					MovePawnToDestination();
+					MovePawnToDestination(); //Movimiento simple
 				}
 				else
 				{
-					//fire up pathfinding
-					//ExecutePathFindMove();
+					//ExecutePathFindMove(); //Ejecutamos el pathfinding
 				}
 			}
-			else
-			{
-				//Stop player from going on in that direction forever. This normally needs to be done
-				//after a long mouse held. This will make the player stop its current MoveMousePressedAndHold
-				//state.
-				PopState();
-			}
+			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
 		}
-		//reset accumulated timer for mouse held button
-		DeltaTimeAccumulated = 0;
+		
+		if(bRightMousePressed && FireModeNum == 1)
+		{
+			bRightMousePressed = false;
+		
+			//Si no estamos cerca del destino y hemos pulsado el botón derecho del ratón
+			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+			{
+				//Our pawn has been ordered to a single location on mouse release.
+				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true))
+				{
+					MovePawnToDestination(); //Movimiento simple
+				}
+				else
+				{
+					//ExecutePathFindMove(); //Ejecutamos el pathfinding
+				}
+			}
+			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
+		}
+		
+		DeltaTimeAccumulated = 0; //Reseteamos el tiempo de pulsado del botón
 	}
 }
 
-/******************************************************************
- *
- *  TUTORIAL FUNCTION
- *
- *  MovePawnToDestination will push a MoveMouseClick state that will make
- *  the pawn go to a single destination with a mouse click and then
- *  stop near the destination.
- *
- ******************************************************************/
+//Movimiento sin pathfinding simple, ponemos al jugador en el estado MoveMouseClick
 function MovePawnToDestination()
 {
-	//`Log("Moving to location without pathfinding!");
 	SetDestinationPosition(MouseHitWorldLocation);
 	PushState('MoveMouseClick');
+	PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
 }
 
-/******************************************************************
- *
- *  TUTORIAL FUNCTION
- *
- *  This is a timer function, it prevents the MoveMouseClick state from
- *  looking to get stuck in an obstacle. After a set of seconds it
- *  pushes the entire state stack so the pawn revert to PlayerMove
- *  automatic state.
- *
- ******************************************************************/
+//Función que prevee que el jugador no se quede atascado con un obstaculo, al cabo de un tiempo el jugador se para
 function StopLingering()
 {
-	//Remove all current move state and query for input from now on.
-	//`Log("Stopped lingering...");
 	PopState(true);
 }
 
@@ -302,7 +258,7 @@ function PlayerMove(float DeltaTime)
 
 	super.PlayerMove(DeltaTime);
 
-	//Get player destination for a check on distance left. (calculate distance)
+	//Calculamos distancia hasta el punto de destino
 	Destination = GetDestinationPosition();
 	DistanceCheck.X = Destination.X - Pawn.Location.X;
 	DistanceCheck.Y = Destination.Y - Pawn.Location.Y;
@@ -327,120 +283,89 @@ function PlayerMove(float DeltaTime)
 
 
 /******************************************************************
- *                      STATES
+ *                      ESTADOS
  *****************************************************************/
 
-/******************************************************************
- *
- *  TUTORIAL STATE (MoveMouseClick)
- *
- *  MoveMouseClick is the state when a mouse button is pressed
- *  once (simple click). Simply go to a set destination.
- *
- *
- ******************************************************************/
+/******** ESTADO Mover a un punto *************/
 state MoveMouseClick
 {
 	event PoppedState()
 	{
-		//`Log("MoveMouseClick state popped, disabling StopLingering timer.");
-		//Disable all active timers to stop lingering if they are active.
-		if(IsTimerActive(nameof(StopLingering)))
-		{
-			ClearTimer(nameof(StopLingering));
-		}
+		//Si el timer de StopLingering estaba activo lo desabilitamos.
+		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering));
+
+		PointerCursor.Destroy();
 	}
 
 	event PushedState()
 	{
-		//Set a function timer. If the pawn is stuck it will stop moving
-		//by itself.
+		//Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
 		SetTimer(3, false, nameof(StopLingering));
-		if (Pawn != None)
-		{
-			// make sure the pawn physics are initialized
-			//Pawn.SetMovementPhysics(); //HACE SALTO RARO AL COMENZAR A ANDAR
-		}
 	}
 
 Begin:
-	while(!bPawnNearDestination)
+	while(!bPawnNearDestination) //Mientras no estemos cerca del destino
 	{
-		//`Log("Simple Move in progress");
 		MoveTo(GetDestinationPosition());
-		
 	}
 
-	//`Log("MoveMouseClick: Pawn is near destination, go out of this state");
-	PopState();
+	PopState(); //Ya hemos llegado al destino quitamos el estado
 }
+/************************************/
 
 /******** ESTADO ATACAR *************/
 state AttackEnemy
 {
 	event PoppedState()
 	{
-		//`Log("AttackEnemy state popped, disabling StopLingering timer.");
-		//Disable all active timers to stop lingering if they are active.
-		if(IsTimerActive(nameof(StopLingering)))
-		{
-			ClearTimer(nameof(StopLingering));
-		}
-		bLeftMousePressed = false;
+		//Si el timer de StopLingering estaba activo lo desabilitamos.
+		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering));
 	}
 
 	event PushedState()
 	{
+		//Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
 		SetTimer(3, false, nameof(StopLingering));
 	}
 
 Begin:
-	while(!bPawnNearDestination)
+	while(!bPawnNearDestination) //Mientras no estemos cerca del destino
 	{
-		//`Log("Go To Target");
-		MoveTo(targetTogo);
-
+		MoveTo(GetDestinationPosition());
 	}
-	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-	//`Log("AttackEnemy: Pawn is near enemy, go out of this state");
+
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack); //Hemos llegado al destino, atacamos
+	
 	PopState();
 	
 }
 /************************************/
 
-/******************************************************************
- *
- *  TUTORIAL STATE (MoveMousePressedAndHold)
- *
- *  MoveMousePressedAndHold is the state when a mouse button is pressed
- *  and kept to move the pawn freely.
- *
- *
- ******************************************************************/
+/******** ESTADO Movimiento continuado (Botón derecho pulsado)*************/
 state MoveMousePressedAndHold
 {
-Begin:
-	if(!bPawnNearDestination)
+	event PoppedState()
 	{
-		//`Log("MoveMousePressedAndHold at pos"@GetDestinationPosition());
+		
+	}
+
+Begin:
+	if(!bPawnNearDestination) //Mientras no estemos cerca del destino
+	{
 		MoveTo(GetDestinationPosition());
 	}
-	else
-	{
-		PopState();
-	}
+	else PopState();
 }
+/************************************/
+
+/******************************************************************
+ *****************************************************************/
 
 simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, int Damage, class<DamageType> damageType, vector Momentum)
 {
 	Super.NotifyTakeHit(InstigatedBy,HitLocation,Damage,damageType,Momentum);
 
 	MyHud(myHUD).MyHudHealth.SetDamage(Damage);
-}
-
-exec function PauseGame()
-{
-  	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
 DefaultProperties

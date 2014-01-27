@@ -15,7 +15,6 @@ event bool Start(optional bool StartPaused = false) //Constructor
 
 function UpdateContador(int calabazas) //Se pone la vida igual a un valor
 {
-	`Log("CALABAZAS QUE QUEDAN " $ calabazas);
 	ActionScriptVoid("_root._contador.SetLabel");
 }
 
