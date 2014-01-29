@@ -37,7 +37,7 @@ function OrcPumpkinCollectionArea GetBaseCollection()
     return none;
 }
 
-function Actor seekPumpkin()
+function Actor seekPumpkin(optional actor NotThis)
 {
     local calabazaPawn C, TargetC;
     local vector DistanceCheck;
@@ -52,7 +52,7 @@ function Actor seekPumpkin()
         
         distance = Sqrt((DistanceCheck.X * DistanceCheck.X) + (DistanceCheck.Y * DistanceCheck.Y));
 
-        if(distance < min_distance || min_distance == 0)
+        if(distance < min_distance || min_distance == 0 && C != NotThis)
         {
             TargetC = C;
             min_distance = distance;
@@ -140,9 +140,13 @@ state FindPumpkin
             NavigationHandle.SetFinalDestination(target.Location);
             
             if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ) MoveTo( TempDest, target ); //Nos movemos hasta el primer nodo del Path
-            else MoveTo(Pawn.Location, Pawn); //No encuentra como ir hasta la base
+            else MoveTo(Pawn.Location, Pawn);
         }
-        else GotoState('Idle');
+        else
+        {
+            InitNavigationHandle();
+            MoveTo(target.Location, target); //No encuentra como ir hasta la calabaza, lo forzamos
+        }
         
         goto 'Begin';
 }
@@ -151,30 +155,30 @@ state FindPumpkin
 /******** ESTADO Entregar calabaza *************/
 state PushPumpkin
 {
+    event Tick(float DeltaTime)
+    {
+        super.Tick(DeltaTime);
+
+        if(EnemyPawn(Pawn).calabazas.length == 0) GotoState('Idle');
+    }
+
     Begin:
         if(BaseCollection == none) BaseCollection = GetBaseCollection();
         MoveTo(Pawn.Location, Pawn);
     End:
-        if(EnemyPawn(Pawn).calabazas.length == 0) GotoState('Idle');
-
-        if( NavigationHandle.ActorReachable( BaseCollection) )
-        {
-            MoveToward( BaseCollection, BaseCollection);
-        }
+        if( NavigationHandle.ActorReachable( BaseCollection) ) MoveToward( BaseCollection, BaseCollection);
         else if( FindNavMeshPath(BaseCollection) )
         {
             NavigationHandle.SetFinalDestination(BaseCollection.Location);
 
-            if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) )
-            {
-                MoveTo( TempDest, BaseCollection ); // Nos movemos hasta el primer nodo del Path
-            }
-            else
-            {
-                MoveTo(Pawn.Location, Pawn); //No encuentra como ir hasta la base
-                `Log("NO ENCUENTRA EL CAMINO");
-            }
+            if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ) MoveTo( TempDest, BaseCollection ); // Nos movemos hasta el primer nodo del Path
+            else MoveTo(Pawn.Location, Pawn); //No encuentra como ir hasta la base
 
+        }
+        else
+        {
+            InitNavigationHandle();
+            MoveTo(BaseCollection.Location, BaseCollection); //No encuentra como ir hasta la base lo forzamos
         }
         
         goto 'End';

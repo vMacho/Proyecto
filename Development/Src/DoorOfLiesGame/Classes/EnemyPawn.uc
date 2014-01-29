@@ -16,16 +16,9 @@ simulated event PostBeginPlay()
 }
 
 DefaultProperties
-{
-    CollisionType=COLLIDE_BlockAll
-    Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
-        CollisionRadius=+50
-        CollisionHeight=+20
-    End Object
-    CylinderComponent=CollisionCylinder
- 
+{ 
     Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
-        //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+        PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
         SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc';
         AnimTreeTemplate=AnimTree'Orco.AnimTree';
         AnimSets(0)=AnimSet'Orco.SkeletalMesh.Idle';
@@ -34,6 +27,13 @@ DefaultProperties
     End Object
     Mesh=EnemySkeletalMesh
     Components.Add(EnemySkeletalMesh)
+
+    CollisionType=COLLIDE_BlockAll
+    Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
+        CollisionRadius=+50
+        CollisionHeight=+50
+    End Object
+    CylinderComponent=CollisionCylinder
  
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow
         Template = ParticleSystem'HumoGato.EjemploParticulas';

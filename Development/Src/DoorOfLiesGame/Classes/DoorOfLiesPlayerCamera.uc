@@ -1,26 +1,13 @@
 class DoorOfLiesPlayerCamera extends Camera;
 
+var float DefaultFreeCamDistance;
+
 simulated event PostBeginPlay()
 {
    super.PostBeginPlay();
-   `Log("Custom Camera up");
+   DefaultFreeCamDistance = FreeCamDistance;
 }
 
-/*****************************************************************
- *
- *  TUTORIAL FUNCTION
- *
- *  This function was extended from camera. Your pawn will request
- *  a camera type when its created with function GetDefaultCameraMode,
- *  Force it to 'Isometric'. This change is small and doesnt hinder the
- *  in-game use of other buil-in camera types.
- *  
- *  This is a skeletal function provided to be simple and to the point
- *  to get an iso camera, add more or extend from another parent class
- *  if you miss anything from GameCamera.
- *
- *
- *****************************************************************/
 function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
 {
    local vector      Loc, Pos, HitLocation, HitNormal;
@@ -124,5 +111,5 @@ function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
 DefaultProperties
 {
    DefaultFOV=90.f;
-   FreeCamDistance = 512;
+   FreeCamDistance = 1024;
 }

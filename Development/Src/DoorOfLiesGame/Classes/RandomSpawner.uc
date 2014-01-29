@@ -30,7 +30,8 @@ function vector RandomLocation()
 	
 	result.X = RandRange(BoundingBox.Min.X, BoundingBox.Max.X);
 	result.Y = RandRange(BoundingBox.Min.Y, BoundingBox.Max.Y);
-	result.Z = RandRange(BoundingBox.Min.Z, (BoundingBox.Max.Z/2));
+	//result.Z = RandRange(BoundingBox.Min.Z, (BoundingBox.Max.Z/2));
+	result.Z = BoundingBox.Max.Z/2;
 	
 	//`Log("Spawner -> "$result.X$", "@result.Y);
 

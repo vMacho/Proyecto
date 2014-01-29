@@ -1,6 +1,5 @@
  /* Victor Macho
     Clase del control del player
-
  */
 
 class DoorOfLiesPlayerController extends PlayerController;
@@ -15,36 +14,32 @@ var Vector      MouseHitWorldNormal;        //Hold the normalized vector of worl
 var Vector      MousePosWorldLocation;      //Hold deprojected mouse location in 3d world coordinates. (calculated in HUD, not used)
 var Vector      MousePosWorldNormal;        //Hold deprojected mouse location normal. (calculated in HUD, used for camera ray from above)
 
-/***************************************************************** 
- *  Calculated in Hud after mouse deprojection, uses MousePosWorldNormal as direction vector 
- *  This is what calculated MouseHitWorldLocation and MouseHitWorldNormal.
- *  
- *  See Hud.PostRender, Mouse deprojection needs Canvas variable.
- *  
- *  **/
 var vector      StartTrace;                 //Hold calculated start of ray from camera
 var Vector      EndTrace;                   //Hold calculated end of ray from camera to ground
 var vector      RayDir;                     //Hold the direction for the ray query.
 var Vector      PawnEyeLocation;            //Hold location of pawn eye for rays that query if an obstacle exist to destination to pathfind.
 var Actor       TraceActor;                 //If an actor is found under mouse cursor when mouse moves, its going to end up here.
 
-//var MeshMouseCursor MouseCursor;              //Hold the 3d mouse cursor
-
-/*****************************************************************
- *
- *  Mouse button handling
- *
- */
-
 var bool        bLeftMousePressed;          //Initialize this function in StartFire and off in StopFire
 var bool        bRightMousePressed;         //Initialize this function in StartFire and off in StopFire
 var float       DeltaTimeAccumulated;       //Accumulate time to check for mouse clicks
 
-/*****************************************************************/
-
 var float       DistanceRemaining;          //This is the calculated distance the pawn has left to get to MouseHitWorldLocation.
 var bool        bPawnNearDestination;       //This indicates if pawn is within acceptable offset of destination to stop moving.
 
+var Actor       ScriptedMoveTarget;
+var Route       ScriptedRoute;
+var int         ScriptedRouteIndex;
+
+var() Vector TempDest;
+var bool GotToDest;
+var Vector NavigationDestination;
+var Vector2D DistanceCheck;
+
+var Actor Target;
+var bool CurrentTargetIsReachable;
+
+/*****************************************************************/
 var vector targetTogo;
 
 var (DoorOfLies) float RotationSpeed;
@@ -100,24 +95,6 @@ event PlayerTick( float DeltaTime )
 	if(bLeftMousePressed) //Usamos el boton Izquierdo para atacar, si pulsamos sobre un enemigo primero va hasta su posicion
 	{
 		DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que dicho boton ha estado pulsado
-		
-		//BUSCAMOS EL TARGET
-		//targetTogo = none;
-		//if(targetTogo != none)
-		//{
-			SetDestinationPosition(MouseHitWorldLocation);
-
-			if(DeltaTimeAccumulated >= 0.13f) //Si Mantenemos pulsado
-			{
-				if(!IsInState('AttackEnemy')) //Si no estabamos atacando
-				{
-					`Log("Pushed AttackEnemy state");
-					PushState('AttackEnemy');
-				}
-				else GotoState('AttackEnemy', 'Begin', false, true);
-			}
-		//}
-
 	}
 
 	//DumpStateStack();
@@ -130,7 +107,7 @@ exec function PauseGame()
 
 exec function NextWeapon() //Scroll de la camara
 {
-	PlayerCamera.FreeCamDistance += (PlayerCamera.FreeCamDistance < 512) ? 64 : 0;
+	PlayerCamera.FreeCamDistance += (PlayerCamera.FreeCamDistance < DoorOfLiesPlayerCamera(PlayerCamera).DefaultFreeCamDistance) ? 64 : 0;
 }
 exec function PrevWeapon() //Scroll de la camara
 {
@@ -169,26 +146,7 @@ simulated function StopFire(optional byte FireModeNum )
 	if(myHUD.bShowHUD)
 	{
 		//Reseteamos el tiempo de pulsado de los botones del ratón
-		if(bLeftMousePressed && FireModeNum == 0)
-		{
-			bLeftMousePressed = false;
-		
-			//Si no estamos cerca del destino y hemos pulsado el botón Izquierdo del ratón
-			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
-			{
-				//Our pawn has been ordered to a single location on mouse release.
-				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true))
-				{
-					MovePawnToDestination(); //Movimiento simple
-				}
-				else
-				{
-					//ExecutePathFindMove(); //Ejecutamos el pathfinding
-				}
-			}
-			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
-		}
+		if(bLeftMousePressed && FireModeNum == 0) bLeftMousePressed = false;
 		
 		if(bRightMousePressed && FireModeNum == 1)
 		{
@@ -205,7 +163,7 @@ simulated function StopFire(optional byte FireModeNum )
 				}
 				else
 				{
-					//ExecutePathFindMove(); //Ejecutamos el pathfinding
+					ExecutePathFindMove(); //Ejecutamos el pathfinding
 				}
 			}
 			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
@@ -215,11 +173,22 @@ simulated function StopFire(optional byte FireModeNum )
 	}
 }
 
-//Movimiento sin pathfinding simple, ponemos al jugador en el estado MoveMouseClick
+//Movimiento sin pathfinding, ponemos al jugador en el estado MoveMouseClick
 function MovePawnToDestination()
 {
 	SetDestinationPosition(MouseHitWorldLocation);
 	PushState('MoveMouseClick');
+	PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+}
+
+//Movimiento com pathfinding,Dependiendo de si hay path y de cuantos nodos tiene elegimos un movimiento más simple (PathFind) o desarrollado (NavMeshSeeking)
+function ExecutePathFindMove()
+{
+	ScriptedMoveTarget = FindPathTo(GetDestinationPosition());
+	
+	if( RouteCache.Length > 0 ) PushState('PathFind');
+	else PushState('NavMeshSeeking');
+
 	PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
 }
 
@@ -229,42 +198,22 @@ function StopLingering()
 	PopState(true);
 }
 
-/******************************************************************
- *
- *  TUTORIAL FUNCTION
- *
- *  PlayerMove is called each frame, we declare it here inside the
- *  PlayerController so its general to all states. It can be possible
- *  to declare this function in each single state, having multiple
- *  PlayerMove scenario, but for the simplicity of the tutorial
- *  we have put it here in the class. It controls the player in that
- *  it does a distance check when moving. It calculates the remaining
- *  distance to the target. If target is within 2D(X,Y) offset, then
- *  set the var bPawnNearDestination for state control.
- *  
- *  Rotation
- *  
- *  This function overrides the controller rotation of the pawn. Depending
- *  on the situation (state) the pawn will either face a direction or rotate
- *  to face the destination.
- *
- ******************************************************************/
 function PlayerMove(float DeltaTime)
 {
 	local Vector PawnXYLocation;
 	local Vector DestinationXYLocation;
 	local Vector    Destination;
-	local Vector2D  DistanceCheck;          
+	local Vector2D  DistanceCheckMove;          
 
 	super.PlayerMove(DeltaTime);
 
 	//Calculamos distancia hasta el punto de destino
 	Destination = GetDestinationPosition();
-	DistanceCheck.X = Destination.X - Pawn.Location.X;
-	DistanceCheck.Y = Destination.Y - Pawn.Location.Y;
-	DistanceRemaining = Sqrt((DistanceCheck.X*DistanceCheck.X) + (DistanceCheck.Y*DistanceCheck.Y));
+	DistanceCheckMove.X = Destination.X - Pawn.Location.X;
+	DistanceCheckMove.Y = Destination.Y - Pawn.Location.Y;
+	DistanceRemaining = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
 	
-	//`Log("DistanceCheck is"@DistanceCheck.X@DistanceCheck.Y);
+	//`Log("DistanceCheckMove is"@DistanceCheckMove.X@DistanceCheckMove.Y);
 	//`Log("Distance remaining"@DistanceRemaining);
 	
 	bPawnNearDestination = DistanceRemaining < 15.0f;
@@ -313,53 +262,140 @@ Begin:
 }
 /************************************/
 
-/******** ESTADO ATACAR *************/
-state AttackEnemy
-{
-	event PoppedState()
-	{
-		//Si el timer de StopLingering estaba activo lo desabilitamos.
-		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering));
-	}
-
-	event PushedState()
-	{
-		//Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
-		SetTimer(3, false, nameof(StopLingering));
-	}
-
-Begin:
-	while(!bPawnNearDestination) //Mientras no estemos cerca del destino
-	{
-		MoveTo(GetDestinationPosition());
-	}
-
-	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack); //Hemos llegado al destino, atacamos
-	
-	PopState();
-	
-}
-/************************************/
-
 /******** ESTADO Movimiento continuado (Botón derecho pulsado)*************/
 state MoveMousePressedAndHold
 {
-	event PoppedState()
-	{
-		
-	}
+	event PoppedState() {}
 
 Begin:
-	if(!bPawnNearDestination) //Mientras no estemos cerca del destino
-	{
-		MoveTo(GetDestinationPosition());
-	}
+	
+	if(!bPawnNearDestination)  MoveTo(GetDestinationPosition()); //Mientras no estemos cerca del destino
 	else PopState();
 }
 /************************************/
 
-/******************************************************************
- *****************************************************************/
+/******** ESTADO Que Busca el camino por pathfindig simple*************/
+state PathFind
+{
+	event PoppedState()
+	{
+		PointerCursor.Destroy();
+	}
+
+	Begin:
+	    if( RouteCache.Length > 0 )
+	    {
+	        ScriptedRouteIndex = 0;
+	        while (Pawn != None && ScriptedRouteIndex < RouteCache.length && ScriptedRouteIndex >= 0)
+	        {
+                ScriptedMoveTarget = RouteCache[ScriptedRouteIndex];
+                if (ScriptedMoveTarget != None) PushState('ScriptedMove');
+
+                ScriptedRouteIndex++;
+	        }
+	        PopState();
+	    }
+}
+/***********************************************************************/
+
+/******** ESTADO Que mueve al jugador por pathfindig simple*************/
+state ScriptedMove
+{
+	event PoppedState()
+	{
+		PointerCursor.Destroy();
+	}
+
+	Begin:
+        while(ScriptedMoveTarget != none && Pawn != none && !Pawn.ReachedDestination(ScriptedMoveTarget))
+        {
+            if (ActorReachable(ScriptedMoveTarget)) //Si podemos llegar directamente
+            {
+                MoveToward(ScriptedMoveTarget, ScriptedMoveTarget);
+                SetDestinationPosition(ScriptedMoveTarget.Location);
+            }
+            else
+            {
+                MoveTarget = FindPathToward(ScriptedMoveTarget);
+                if (MoveTarget != None)
+                {
+                    MoveToward(MoveTarget, MoveTarget);
+                    SetDestinationPosition(MoveTarget.Location);
+                }
+                else
+                {
+                    //Si llegamos a este punto es por un error al encontrar el camino en el mapa
+                    `warn("Failed to find path to"@ScriptedMoveTarget);
+                    ScriptedMoveTarget = None;
+                }
+            }
+        }
+        PopState();
+}
+/***********************************************************************/
+
+/******** ESTADO Que mueve al jugador por NavMesh (Pylon)*************/
+state NavMeshSeeking
+{
+    function bool FindNavMeshPath()
+    {
+	    NavigationHandle.PathConstraintList = none;
+	    NavigationHandle.PathGoalList = none;
+
+	    class'NavMeshPath_Toward'.static.TowardPoint( NavigationHandle, NavigationDestination );
+	    class'NavMeshGoal_At'.static.AtLocation( NavigationHandle, NavigationDestination, 50, );
+
+	    return NavigationHandle.FindPath();
+    }
+
+    event PoppedState()
+	{
+		PointerCursor.Destroy();
+	}
+
+    Begin:
+        NavigationDestination = GetDestinationPosition();
+
+        if( FindNavMeshPath() )
+        {
+            NavigationHandle.SetFinalDestination(NavigationDestination);
+            
+            //FlushPersistentDebugLines();
+            //NavigationHandle.DrawPathCache(,TRUE);
+
+            while( Pawn != None && !Pawn.ReachedPoint(NavigationDestination, None) )
+            {
+                if( NavigationHandle.PointReachable( NavigationDestination ) ) MoveTo( NavigationDestination, None, , true ); //Si podemos llegar a este punto directamente
+                else
+                {
+                	//Nos movemos al primer nodo de la ruta escogida
+                    if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) )
+                    {
+                        if (!NavigationHandle.SuggestMovePreparation( TempDest,self)) MoveTo( TempDest, None, , true );
+                    }
+                }
+                DistanceCheck.X = NavigationDestination.X - Pawn.Location.X;
+                DistanceCheck.Y = NavigationDestination.Y - Pawn.Location.Y;
+                DistanceRemaining = Sqrt((DistanceCheck.X*DistanceCheck.X) + (DistanceCheck.Y*DistanceCheck.Y));
+                
+                GotToDest = Pawn.ReachedPoint(NavigationDestination, None);
+
+                if( DistanceRemaining < 15) break;
+            }
+        }
+        else
+        {
+            //Si llegamos a este punto es por un error al encontrar el camino en el mapa
+            `warn("FindNavMeshPath failed to find a path to"@ScriptedMoveTarget);
+            ScriptedMoveTarget = None;
+        }   
+
+	    Pawn.ZeroMovementVariables();
+	    PopState(); //Volvemos al anterior estado
+}
+/***********************************************************************/
+
+/******************************************************************/
 
 simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, int Damage, class<DamageType> damageType, vector Momentum)
 {
