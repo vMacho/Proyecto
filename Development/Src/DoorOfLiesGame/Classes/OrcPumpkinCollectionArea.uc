@@ -48,18 +48,21 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
     if(Other.Tag == tagPlayer)
     {
-        if(DoorOfLiesPawn(Other).calabazas.length > 0)
+        if(RecolectorPawn(Other).calabazas.length > 0)
         {
-            calabazas -= DoorOfLiesPawn(Other).calabazas.length;
+            `Log(Other.Tag$" Entrega "$RecolectorPawn(Other).calabazas.length);
+            calabazas -= RecolectorPawn(Other).calabazas.length;
             
-            for(i = 0; i < DoorOfLiesPawn(Other).calabazas.length; i++) DoorOfLiesPawn(Other).Mesh.DetachComponent(DoorOfLiesPawn(Other).calabazas[i]);
-            DoorOfLiesPawn(Other).calabazas.length = 0;
+            for(i = 0; i < RecolectorPawn(Other).calabazas.length; i++) RecolectorPawn(Other).Mesh.DetachComponent(RecolectorPawn(Other).calabazas[i]);
+            RecolectorPawn(Other).calabazas.length = 0;
 
             PlaySound(SoundCue'A_Pickups_Powerups.PowerUps.A_Powerup_UDamage_WarningCue');
 
+            _contadorHUD = new class'OrcScore';
+            _contadorHUD.Start();
             _contadorHUD.UpdateContador(calabazas);
 
-            if(calabazas <= 0) TriggerGlobalEventClass(class'SeqEvent_FinishLevel',none);
+            if(calabazas <= 0) TriggerGlobalEventClass(class'SeqEvent_FinishLevel',Other);
         }
     }
 }
@@ -112,7 +115,8 @@ DefaultProperties
     Components.Add(Foco)
 
     Begin Object Class=StaticMeshComponent Name=ContadorSkeletalMesh
-       StaticMesh=StaticMesh'EngineMeshes.Cube'
+        LightEnvironment=MyLightEnvironment;
+        StaticMesh=StaticMesh'EngineMeshes.Cube'
        Scale = 0.5
     End Object
     Components.Add(ContadorSkeletalMesh);

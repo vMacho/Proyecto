@@ -3,36 +3,24 @@
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class EnemyPawn extends Pawn
+class EnemyPawn extends RecolectorPawn
   ClassGroup(EnemyPumpkin)
   placeable;
    
 var(EnemyPumpkin) class<AIController> NPCController;
-
-function AddDefaultInventory()
-{
-    //InvManager.CreateInventory(class'SandboxPaintballGun');
-    //For those in the back who don't follow, SandboxPaintballGun is a custom weapon
-    //I've made in an earlier article, don't look for it in your UDK build.
-}
  
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
-    AddDefaultInventory(); //GameInfo calls it only for players, so we have to do it ourselves for AI.
-}
-
-event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
-{
-    super.Touch(Other, OtherComp, HitLocation, HitNormal);
+    maxCalabazas = DoorOfLiesGame(WorldInfo.Game).MaxCalabazasPlayer;
 }
 
 DefaultProperties
 {
     CollisionType=COLLIDE_BlockAll
     Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
-        CollisionRadius=+0021.000000
-        CollisionHeight=+0048.000000
+        CollisionRadius=+50
+        CollisionHeight=+20
     End Object
     CylinderComponent=CollisionCylinder
  
@@ -58,4 +46,6 @@ DefaultProperties
     GroundSpeed=150.0 //Para hacerlo mas lento que el player
     DrawScale = 1.5;
     ControllerClass=class'EnemyController'
+
+    Tag = "EnemyPawn";
 }

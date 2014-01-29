@@ -3,13 +3,11 @@
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class DoorOfLiesPawn extends Pawn;
+class DoorOfLiesPawn extends RecolectorPawn;
 
 var (Player) SpotLightComponent flashlight;
 var ParticleSystemComponent ParticlesFollowUs;
 var AnimNodeBlendList AnimNodeBlendList;
-var (Player) int maxCalabazas;
-var (Player) array<CalabazaActor> calabazas;
 
 enum EAnimState
 {
@@ -81,29 +79,6 @@ simulated event Destroyed()
   Super.Destroyed();
 
   AnimNodeBlendList = None;
-}
-
-event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
-{
-    local CalabazaActor calabaza;
-    local Vector NewPosition;
-    super.Touch(Other, OtherComp, HitLocation, HitNormal);
-
-    //Si chocamos con una calabaza y no hemos superado el limite de calabazas que podemos llevar
-    if(Other.Tag == 'CalabazaPawn' && calabazas.length < maxCalabazas)
-    {
-        calabaza = new class'CalabazaActor';
-
-        NewPosition.Z = 50 * calabazas.length;
-        calabaza.SetTranslation(NewPosition);
-        
-        Mesh.AttachComponentToSocket(calabaza, 'sk_head');
-
-        Other.destroy();
-        calabazas.AddItem(calabaza);
-
-        PlaySound(SoundCue'KismetGame_Assets.Sounds.S_Blast_05_Cue');
-    }
 }
 
 defaultproperties

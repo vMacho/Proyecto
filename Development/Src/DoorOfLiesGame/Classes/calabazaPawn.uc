@@ -6,7 +6,6 @@ Define Modelo - Animaciones - Afecta Luz o no
 class CalabazaPawn extends Pawn
   placeable;
    
-var (calabaza) int life;
 var (calabaza) int speed;
 var (calabaza) int speedRotator;
 var (calabaza) float amplitude;
@@ -31,6 +30,49 @@ event Tick(float DeltaTime)
 
     SetLocation(NewPosition);
     SetRotation(NewRotation);
+}
+
+event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
+{
+    local CalabazaActor calabaza;
+    local Vector NewPosition;
+    super.Touch(Other, OtherComp, HitLocation, HitNormal);
+
+    //Si chocamos con una calabaza y no hemos superado el limite de calabazas que podemos llevar
+    if(Other.Tag == 'Player')
+    {
+        if(DoorOfLiesPawn(Other).calabazas.length < DoorOfLiesPawn(Other).maxCalabazas)
+        {
+            calabaza = new class'CalabazaActor';
+
+            NewPosition.Z = 50 * DoorOfLiesPawn(Other).calabazas.length;
+            calabaza.SetTranslation(NewPosition);
+            
+            DoorOfLiesPawn(Other).Mesh.AttachComponentToSocket(calabaza, 'sk_head');
+            DoorOfLiesPawn(Other).calabazas.AddItem(calabaza);
+
+            Other.PlaySound(SoundCue'KismetGame_Assets.Sounds.S_Blast_05_Cue');
+
+            Destroy();
+        }
+    }
+    else if(Other.Tag == 'EnemyPawn')
+    {
+        if(EnemyPawn(Other).calabazas.length < EnemyPawn(Other).maxCalabazas)
+        {
+            calabaza = new class'CalabazaActor';
+
+            NewPosition.Z = 50 * EnemyPawn(Other).calabazas.length;
+            calabaza.SetTranslation(NewPosition);
+            
+            EnemyPawn(Other).Mesh.AttachComponentToSocket(calabaza, 'sk_head');
+            EnemyPawn(Other).calabazas.AddItem(calabaza);
+
+            Other.PlaySound(SoundCue'KismetGame_Assets.Sounds.S_Blast_05_Cue');
+
+            Destroy();
+        }
+    }
 }
 
 DefaultProperties
@@ -62,7 +104,6 @@ DefaultProperties
     End Object
     Components.Add(ParticlesFollow)
     
-    life = 5;
     speed = 2;
     speedRotator = 20;
     amplitude = 0.5;

@@ -32,5 +32,5 @@ defaultproperties
   MapExtentsComponent=DrawSphere0
   Components.Add(DrawSphere0)
 
-  bForwardAlwaysUp=True
+  bForwardAlwaysUp=false;
 }
