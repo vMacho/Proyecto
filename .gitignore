@@ -3559,3 +3559,7 @@ UDKGame/Logs/Launch-backup-2014.01.24-02.24.49.log
 UDKGame/Logs/unreal-v10907-2014.01.24-01.29.47.dmp
 UDKGame/Logs/unreal-v10907-2014.01.24-01.31.05.dmp
 UDKGame/Logs/unreal-v10907-2014.01.24-01.32.47.dmp
+UDKGame/Config/UDKMaterialEditor_layoutAUI_INT.txt
+UDKGame/Config/UDKMaterialInstanceEditor_layoutAUI_INT.txt
+UDKGame/Config/UDKSoundCueEditor_layoutAUI_INT.txt
+UDKGame/Config/UDKStaticMeshEditor_layoutAUI_INT.txt
