@@ -17,17 +17,25 @@ var OrcScore _contadorHUD;
 simulated event PostBeginPlay()
 {
     local Vector NewPosition;
+    local MaterialInstanceConstant OrcScore_mat;
+    local TextureRenderTarget2D RenderTexture;
 
     super.PostBeginPlay();
+
     calabazas = DoorOfLiesGame(WorldInfo.Game).MaxCalabazas;
-    setCollision(true,true);
+
+    RenderTexture = class'TextureRenderTarget2D'.static.Create(512, 512);
+
+    OrcScore_mat = new(None) Class'MaterialInstanceConstant';
+    OrcScore_mat.SetParent( Material'cotadorMaterial.Material.cotadorMaterial' );
+    OrcScore_mat.SetTextureParameterValue('myTexture', RenderTexture);
 
     NewPosition.Z = 600;
     contador.SetTranslation(NewPosition);
-    
-    contador.SetMaterial(0, Material'cotadorMaterial.Material.cotadorMaterial');
-
+    contador.SetMaterial(0, OrcScore_mat);
+        
     _contadorHUD = new class'OrcScore';
+    _contadorHUD.RenderTexture = RenderTexture;
     _contadorHUD.Start();
     _contadorHUD.UpdateContador(calabazas);
 }
@@ -58,8 +66,6 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
             PlaySound(SoundCue'A_Pickups_Powerups.PowerUps.A_Powerup_UDamage_WarningCue');
 
-            _contadorHUD = new class'OrcScore';
-            _contadorHUD.Start();
             _contadorHUD.UpdateContador(calabazas);
 
             if(calabazas <= 0) TriggerGlobalEventClass(class'SeqEvent_FinishLevel',Other);
