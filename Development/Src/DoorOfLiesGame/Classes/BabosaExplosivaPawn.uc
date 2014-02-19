@@ -3,22 +3,28 @@
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class EnemyPawn extends RecolectorPawn
-  ClassGroup(EnemyPumpkin)
+class BabosaExplosivaPawn extends HumanoidPawn
+  ClassGroup(EnemyBabosa)
   placeable;
    
-var(EnemyPumpkin) class<AIController> NPCController;
+var(BabosaExplosiva) class<AIController> NPCController;
  
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
-    maxCalabazas = DoorOfLiesGame(WorldInfo.Game).MaxCalabazasPlayer;
+}
+
+simulated event Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal)
+{
+    super.Bump(Other, OtherComp, HitNormal);
+
+    if(DoorOfliesPawn(Other) != none) controller.GotoState('Explode');
 }
 
 DefaultProperties
 { 
     Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
-        PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+        //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
         SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc';
         AnimTreeTemplate=AnimTree'Orco.AnimTree';
         AnimSets(0)=AnimSet'Orco.SkeletalMesh.Idle';
@@ -30,7 +36,7 @@ DefaultProperties
 
     CollisionType=COLLIDE_BlockAll
     Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
-        CollisionRadius=+50
+        CollisionRadius=+75
         CollisionHeight=+50
     End Object
     CylinderComponent=CollisionCylinder
@@ -43,9 +49,10 @@ DefaultProperties
     bJumpCapable=false
     bCanJump=false
  
-    GroundSpeed=150.0 //Para hacerlo mas lento que el player
-    DrawScale = 1.5;
-    ControllerClass=class'EnemyController'
+    GroundSpeed=200.0 //Para hacerlo mas lento que el player
+    DrawScale = 0.5
+    ControllerClass=class'BabosaExplosivaController'
 
-    Tag = "EnemyPawn";
+    WeaponRange = 400
+    distanceTosee = 1000
 }

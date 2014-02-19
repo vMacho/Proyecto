@@ -300,7 +300,7 @@ function DrawMap()
     local Vector PlayerPos, ClampedPlayerPos, RotPlayerPos, DisplayPlayerPos, StartPos;
     local LinearColor MapOffset;
     local Float ActualMapRange;
-    local CalabazaPawn C;
+    local HumanoidPawn C;
 
     local MaterialInstanceConstant MatInst;
     local MaterialInstanceConstant MatInstCompassOverlay;
@@ -398,29 +398,32 @@ function DrawMap()
         Canvas.DrawBox(BoxSize,BoxSize);
 
         /*****************************
-        *  Draw Calabazas
+        *  Draw Humanoids
         *****************************/
 
-        foreach WorldInfo.AllPawns(class'CalabazaPawn',C)
+        foreach WorldInfo.AllPawns(class'HumanoidPawn',C)
         {
-            //Calculate normalized player position
-            PlayerPos.Y = (GameMinimap.MapCenter.X - C.Location.X) / ActualMapRange;
-            PlayerPos.X = (C.Location.Y - GameMinimap.MapCenter.Y) / ActualMapRange;
-
-            //Calculate position for displaying the player in the map
-            DisplayPlayerPos.X = VSize(PlayerPos) * Cos( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
-            DisplayPlayerPos.Y = VSize(PlayerPos) * Sin( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
-
-            if(VSize(DisplayPlayerPos - RotPlayerPos) <= ((TileSize / 2.0) - (TileSize * Sqrt(2 * Square(BoxSize / 2)) / MapDim)))
+            if(C != PlayerOwner.Pawn)
             {
-                //Draw the player's location
-                Canvas.SetPos(  MapPosition.X + MapDim * (((DisplayPlayerPos.X + 0.5) - StartPos.X) / TileSize) - (BoxSize / 2),
-                            MapPosition.Y + MapDim * (((DisplayPlayerPos.Y + 0.5) - StartPos.Y) / TileSize) - (BoxSize / 2));
-                Canvas.SetDrawColor(PlayerColors[1].R,
-                                PlayerColors[1].G,
-                                PlayerColors[1].B,
-                                PlayerColors[1].A);
-                Canvas.DrawBox(BoxSize,BoxSize);
+                //Calculate normalized player position
+                PlayerPos.Y = (GameMinimap.MapCenter.X - C.Location.X) / ActualMapRange;
+                PlayerPos.X = (C.Location.Y - GameMinimap.MapCenter.Y) / ActualMapRange;
+
+                //Calculate position for displaying the player in the map
+                DisplayPlayerPos.X = VSize(PlayerPos) * Cos( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
+                DisplayPlayerPos.Y = VSize(PlayerPos) * Sin( ATan2(PlayerPos.Y, PlayerPos.X) - MapRotation);
+
+                if(VSize(DisplayPlayerPos - RotPlayerPos) <= ((TileSize / 2.0) - (TileSize * Sqrt(2 * Square(BoxSize / 2)) / MapDim)))
+                {
+                    //Draw the player's location
+                    Canvas.SetPos(  MapPosition.X + MapDim * (((DisplayPlayerPos.X + 0.5) - StartPos.X) / TileSize) - (BoxSize / 2),
+                                MapPosition.Y + MapDim * (((DisplayPlayerPos.Y + 0.5) - StartPos.Y) / TileSize) - (BoxSize / 2));
+                    Canvas.SetDrawColor(PlayerColors[1].R,
+                                    PlayerColors[1].G,
+                                    PlayerColors[1].B,
+                                    PlayerColors[1].A);
+                    Canvas.DrawBox(BoxSize,BoxSize);
+                }
             }
         }
 

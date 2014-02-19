@@ -3,7 +3,7 @@
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class DoorOfLiesPawn extends RecolectorPawn;
+class DoorOfLiesPawn extends HumanoidPawn;
 
 var (Player) SpotLightComponent flashlight;
 var ParticleSystemComponent ParticlesFollowUs;
@@ -20,8 +20,6 @@ enum EAnimState
 simulated event PostBeginPlay() //Al empezar
 {
     super.PostBeginPlay();
-
-    maxCalabazas = DoorOfLiesGame(WorldInfo.Game).MaxCalabazasPlayer;
 }
 
 simulated function name GetDefaultCameraMode( PlayerController RequestedBy ) // Tipo de camara por defecto
@@ -135,10 +133,5 @@ defaultproperties
 
     DrawScale = 3;
     bCanJump=false
-
-    bCollideActors = true;
-    bBlockActors = false;
-
-    Tag = "Player";   
 }
 
