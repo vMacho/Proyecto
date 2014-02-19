@@ -102,23 +102,16 @@ defaultproperties
         BlockRigidBody=true;
         CollideActors=true;
         BlockZeroExtent=true;
-        PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
+        PhysicsAsset=PhysicsAsset'Alice.SkeletalMesh.Alice_Physics'
 
-        SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc';
-        AnimTreeTemplate=AnimTree'Orco.AnimTree';
-        AnimSets(0)=AnimSet'Orco.SkeletalMesh.Idle';
+        SkeletalMesh=SkeletalMesh'Alice.SkeletalMesh.Alice';
+        AnimTreeTemplate=AnimTree'Alice.AnimSet.AnimTree';
+        AnimSets(0)=AnimSet'Alice.AnimSet.Anim_Alice';
 
     End Object
     Mesh=InitialSkeletalMesh;
     Components.Add(InitialSkeletalMesh);
-
-    CollisionType=COLLIDE_BlockAll
-    Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
-    CollisionRadius=+0021.000000
-    //CollisionHeight=+0048.000000
-    End Object
-    CylinderComponent=CollisionCylinder
-
+   
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow //Particulas que nos siguen
         Template = ParticleSystem'HumoGato.EjemploParticulas';
         bSuppressSpawning = true;
@@ -140,12 +133,12 @@ defaultproperties
     End Object
     Components.Add(Foco)
 
-    DrawScale = 0.75;
+    DrawScale = 3;
     bCanJump=false
 
     bCollideActors = true;
-    bBlockActors = true;
+    bBlockActors = false;
 
-    Tag = "Player";
+    Tag = "Player";   
 }
 

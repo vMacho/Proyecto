@@ -9,5 +9,5 @@ DefaultProperties
 { 
     StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'        
     
-    Scale = 5; //Scale del Mesh
+    Scale = 2.5; //Scale del Mesh
 }

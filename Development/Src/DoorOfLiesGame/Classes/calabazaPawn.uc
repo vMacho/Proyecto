@@ -45,7 +45,7 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
         {
             calabaza = new class'CalabazaActor';
 
-            NewPosition.Z = 50 * DoorOfLiesPawn(Other).calabazas.length;
+            NewPosition.Z = 25 * DoorOfLiesPawn(Other).calabazas.length;
             calabaza.SetTranslation(NewPosition);
             
             DoorOfLiesPawn(Other).Mesh.AttachComponentToSocket(calabaza, 'sk_head');
@@ -62,7 +62,7 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
         {
             calabaza = new class'CalabazaActor';
 
-            NewPosition.Z = 50 * EnemyPawn(Other).calabazas.length;
+            NewPosition.Z = 25 * EnemyPawn(Other).calabazas.length;
             calabaza.SetTranslation(NewPosition);
             
             EnemyPawn(Other).Mesh.AttachComponentToSocket(calabaza, 'sk_head');
