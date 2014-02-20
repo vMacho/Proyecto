@@ -124,7 +124,7 @@ exec function StartFire(optional byte FireModeNum)
 		PopState(true);
 		
 		//Set timer
-		DeltaTimeAccumulated =0;
+		DeltaTimeAccumulated = 0;
 
 		//Set initial location of destination
 		SetDestinationPosition(MouseHitWorldLocation);

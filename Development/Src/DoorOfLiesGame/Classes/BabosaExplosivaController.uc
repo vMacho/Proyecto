@@ -2,6 +2,7 @@ class BabosaExplosivaController extends AIController;
  
 var Actor target;
 var Vector TempDest;
+var float TimerAttack;
  
 simulated event PostBeginPlay()
 {
@@ -59,11 +60,11 @@ auto state Idle
         target = Seen;
         playerDistance = VSize(Pawn.Location - target.Location);
         
-        if(playerDistance > HumanoidPawn(Pawn).WeaponRange && playerDistance < HumanoidPawn(Pawn).distanceTosee) GotoState('Follow');
-
-        //else GotoState('Attack');
+        if(playerDistance > MocoPawn(Pawn).AttackRange && playerDistance < MocoPawn(Pawn).distanceTosee) GotoState('Follow');
+        else if(playerDistance < MocoPawn(Pawn).AttackRange) GotoState('Attack');
     }
 Begin:
+    `log("Parado");
    ResetMove();
    target = none;
 }
@@ -89,7 +90,8 @@ Begin:
     
     playerDistance = VSize(Pawn.Location - target.Location);
         
-    if(playerDistance > HumanoidPawn(Pawn).WeaponRange && playerDistance < HumanoidPawn(Pawn).distanceTosee) goto 'Begin';
+    if(playerDistance > MocoPawn(Pawn).AttackRange && playerDistance < MocoPawn(Pawn).distanceTosee) goto 'Begin';
+    else if(playerDistance < MocoPawn(Pawn).AttackRange) GotoState('Attack');
     else GotoState('Idle');
     
 }
@@ -106,7 +108,52 @@ Begin:
 }
 /*********************************/
 
+/******** ESTADO Attack *************/
+state Attack
+{
+    local float playerDistance;
+    local Vector playerpos;
+    ignores SeePlayer;
+
+    event Tick(float DeltaTime)
+    {
+        super.Tick(DeltaTime);
+
+        TimerAttack += DeltaTime;
+
+        playerDistance = VSize(Pawn.Location - target.Location);
+        
+        if(TimerAttack >= MocoPawn(Pawn).AttackTime) Shoot();
+    }
+
+    function Shoot()
+    {
+        if(target != none)
+        {
+            `log("ATACO a" $ target.Name);
+            TimerAttack = 0;
+
+            Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);
+            GotoState('Follow');
+        }
+    }
+
+Begin:
+    playerpos = target.Location;
+    WorldInfo.MyDecalManager.SpawnDecal (DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak', // UMaterialInstance used for this decal.
+                                         playerpos, // Decal spawned at the hit location.
+                                         Rotator(vect(0.0f,0.0f,-1.0f)), // Orient decal into the surface.
+                                         254, 254, // Decal size in tangent/binormal directions.
+                                         512, // Decal size in normal direction.
+                                         false, // If TRUE, use "NoClip" codepath.
+                                         FRand() * 360, // random rotation
+                                         ,true ,true, //bProjectOnTerrain y bProjectOnSkeletalMeshes
+                                         ,,,MocoPawn(Pawn).AttackTime + 1
+                            );
+}
+/*********************************/
+
 DefaultProperties
 {
-    
+    TimerAttack = 0;
 }

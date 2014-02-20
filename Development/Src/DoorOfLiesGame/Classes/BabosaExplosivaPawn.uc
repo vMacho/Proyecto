@@ -3,7 +3,7 @@
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class BabosaExplosivaPawn extends HumanoidPawn
+class BabosaExplosivaPawn extends MocoPawn
   ClassGroup(EnemyBabosa)
   placeable;
    
@@ -53,6 +53,8 @@ DefaultProperties
     DrawScale = 0.5
     ControllerClass=class'BabosaExplosivaController'
 
-    WeaponRange = 400
+    AttackRange = 600
+    AttackTime = 1;
     distanceTosee = 1000
+    bulletClass = class'Bullet_Moco_slow'
 }

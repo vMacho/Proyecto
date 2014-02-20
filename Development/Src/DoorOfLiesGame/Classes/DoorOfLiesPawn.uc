@@ -20,6 +20,7 @@ enum EAnimState
 simulated event PostBeginPlay() //Al empezar
 {
     super.PostBeginPlay();
+    AddDefaultInventory();
 }
 
 simulated function name GetDefaultCameraMode( PlayerController RequestedBy ) // Tipo de camara por defecto
@@ -79,6 +80,32 @@ simulated event Destroyed()
   AnimNodeBlendList = None;
 }
 
+function AddDefaultInventory()
+{
+    InvManager.DiscardInventory();
+    InvManager.CreateInventory(class'MyWeapon'); //InvManager is the pawn's InventoryManager
+}
+
+simulated event SetPosition(UDKPawn Holder)
+{
+    local SkeletalMeshComponent compo;
+    local SkeletalMeshSocket socket;
+    local Vector FinalLocation;
+ 
+    compo = Holder.Mesh;
+ 
+    if (compo != none)
+    {
+        socket = compo.GetSocketByName('sk_head');
+        if (socket != none)
+        {
+            FinalLocation = compo.GetBoneLocation(socket.BoneName);
+        }
+    } 
+ 
+    SetLocation(FinalLocation);
+}
+
 defaultproperties
 {
     Components.Remove(Sprite)
@@ -133,5 +160,10 @@ defaultproperties
 
     DrawScale = 3;
     bCanJump=false
+
+
+    InventoryManagerClass=class'DoorOfLiesInventoryManager'
+
+    bCanPickupInventory = true
 }
 
