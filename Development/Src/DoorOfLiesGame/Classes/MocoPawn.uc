@@ -1,4 +1,4 @@
-class MocoPawn extends Pawn;
+class MocoPawn extends Attackable;
 
 var (Moco) float  distanceTosee;
 var (Moco) float AttackRange;

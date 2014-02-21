@@ -36,19 +36,14 @@ var bool GotToDest;
 var Vector NavigationDestination;
 var Vector2D DistanceCheck;
 
-var Actor Target;
+var Attackable Target;
 var bool CurrentTargetIsReachable;
 
 /*****************************************************************/
-var vector targetTogo;
 
 var (DoorOfLies) float RotationSpeed;
 var PointerActor PointerCursor;
 
-simulated event PostBeginPlay()
-{
-	super.PostBeginPlay();
-}
 
 function UpdateRotation( float DeltaTime ) //Truncamos la rotacion
 {
@@ -105,11 +100,11 @@ exec function PauseGame()
   	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
-exec function NextWeapon() //Scroll de la camara
+exec function ZoomCameraDown() //Scroll de la camara
 {
 	PlayerCamera.FreeCamDistance += (PlayerCamera.FreeCamDistance < DoorOfLiesPlayerCamera(PlayerCamera).DefaultFreeCamDistance) ? 64 : 0;
 }
-exec function PrevWeapon() //Scroll de la camara
+exec function ZoomCameraUp() //Scroll de la camara
 {
 	PlayerCamera.FreeCamDistance -= (PlayerCamera.FreeCamDistance > 128) ? 64 : 0;
 }
@@ -139,14 +134,24 @@ exec function StartFire(optional byte FireModeNum)
 }
 
 //Relase del boton del ratón, mandamos al jugador al punto de destino
-simulated function StopFire(optional byte FireModeNum )
+exec function StopFire(optional byte FireModeNum )
 {
 	//`Log("delta accumulated"@DeltaTimeAccumulated);
-
 	if(myHUD.bShowHUD)
 	{
 		//Reseteamos el tiempo de pulsado de los botones del ratón
-		if(bLeftMousePressed && FireModeNum == 0) bLeftMousePressed = false;
+		if(bLeftMousePressed && FireModeNum == 0)
+		{
+			bLeftMousePressed = false;
+
+			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+			{
+				//Our pawn has been ordered to a single location on mouse release.
+				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(0); //Movimiento simple
+			}
+			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
+		}
 		
 		if(bRightMousePressed && FireModeNum == 1)
 		{
@@ -157,14 +162,8 @@ simulated function StopFire(optional byte FireModeNum )
 			{
 				//Our pawn has been ordered to a single location on mouse release.
 				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true))
-				{
-					MovePawnToDestination(); //Movimiento simple
-				}
-				else
-				{
-					ExecutePathFindMove(); //Ejecutamos el pathfinding
-				}
+				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(1); //Movimiento simple
+				else ExecutePathFindMove(); //Ejecutamos el pathfinding
 			}
 			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
 		}
@@ -174,11 +173,23 @@ simulated function StopFire(optional byte FireModeNum )
 }
 
 //Movimiento sin pathfinding, ponemos al jugador en el estado MoveMouseClick
-function MovePawnToDestination()
-{
-	SetDestinationPosition(MouseHitWorldLocation);
-	PushState('MoveMouseClick');
-	PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+function MovePawnToDestination(int buttonpressed)
+{	
+	if(buttonpressed == 0) //left mouse button
+	{
+		if(Attackable(TraceActor) != none)
+		{
+			Target = Attackable(TraceActor);
+			PushState('Attack');
+			SetDestinationPosition(Target.Location);
+		}		
+	}
+	else //right mouse button
+	{
+		SetDestinationPosition(MouseHitWorldLocation);
+		PushState('MoveMouseClick');
+		PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+	}
 }
 
 //Movimiento com pathfinding,Dependiendo de si hay path y de cuantos nodos tiene elegimos un movimiento más simple (PathFind) o desarrollado (NavMeshSeeking)
@@ -394,6 +405,43 @@ state NavMeshSeeking
 	    PopState(); //Volvemos al anterior estado
 }
 /***********************************************************************/
+
+/******** ESTADO Atacar *************/
+state Attack
+{
+	event PoppedState()
+	{
+		//Si el timer de StopLingering estaba activo lo desabilitamos.
+		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering));
+	}
+
+	event PushedState()
+	{
+		//Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
+		SetTimer(3, false, nameof(StopLingering));
+	}
+
+Begin:
+	if(Target != none)
+	{
+		while(!bPawnNearDestination) //Mientras no estemos cerca del destino
+		{
+			MoveTo(Target.Location);
+		}
+		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
+		while(Target.health > 0)
+		{
+			if( Pawn.Weapon != None )
+			{
+				Pawn.Weapon.StartFire(0);
+			}
+		}
+
+	}
+	
+	PopState(); //Ya hemos llegado al destino quitamos el estado
+}
+/************************************/
 
 /******************************************************************/
 

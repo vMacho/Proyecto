@@ -6,7 +6,6 @@
 class Bullet_Moco_slow extends Pawn;
    
 var (Weapon) float modSpeed;
-var float timeAccum;
 
 simulated event PostBeginPlay()
 {

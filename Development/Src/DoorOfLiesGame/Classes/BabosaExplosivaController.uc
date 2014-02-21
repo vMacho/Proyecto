@@ -64,7 +64,6 @@ auto state Idle
         else if(playerDistance < MocoPawn(Pawn).AttackRange) GotoState('Attack');
     }
 Begin:
-    `log("Parado");
    ResetMove();
    target = none;
 }
@@ -102,6 +101,7 @@ state Explode
 {
     
 Begin:
+    ResetMove();
     sleep(1);
     Pawn.Destroy();
     
@@ -130,7 +130,6 @@ state Attack
     {
         if(target != none)
         {
-            `log("ATACO a" $ target.Name);
             TimerAttack = 0;
 
             Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);

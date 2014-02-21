@@ -64,6 +64,13 @@ event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
     }
 }
 
+simulated event Vector GetWeaponStartTraceLocation(optional Weapon CurrentWeapon)
+{
+   super.GetWeaponStartTraceLocation();
+
+   return Weapon.Location;
+}
+
 /* 
  * Called after initializing the AnimTree for the given SkeletalMeshComponent that has this Actor as its Owner
  * this is a good place to cache references to skeletal controllers, etc that the Actor modifies
@@ -83,28 +90,9 @@ simulated event Destroyed()
 function AddDefaultInventory()
 {
     InvManager.DiscardInventory();
-    InvManager.CreateInventory(class'MyWeapon'); //InvManager is the pawn's InventoryManager
 }
 
-simulated event SetPosition(UDKPawn Holder)
-{
-    local SkeletalMeshComponent compo;
-    local SkeletalMeshSocket socket;
-    local Vector FinalLocation;
- 
-    compo = Holder.Mesh;
- 
-    if (compo != none)
-    {
-        socket = compo.GetSocketByName('sk_head');
-        if (socket != none)
-        {
-            FinalLocation = compo.GetBoneLocation(socket.BoneName);
-        }
-    } 
- 
-    SetLocation(FinalLocation);
-}
+
 
 defaultproperties
 {
@@ -137,6 +125,16 @@ defaultproperties
     Mesh=InitialSkeletalMesh;
     Components.Add(InitialSkeletalMesh);
    
+
+    Begin Object Name=CollisionCylinder
+        CollisionRadius=+0034.000000
+        CollisionHeight=+0078.000000
+        BlockNonZeroExtent=true
+        BlockZeroExtent=true
+        BlockActors=false
+        CollideActors=true
+    End Object
+
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow //Particulas que nos siguen
         Template = ParticleSystem'HumoGato.EjemploParticulas';
         bSuppressSpawning = true;
