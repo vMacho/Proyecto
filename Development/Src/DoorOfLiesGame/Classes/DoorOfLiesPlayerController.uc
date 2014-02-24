@@ -136,6 +136,9 @@ exec function StartFire(optional byte FireModeNum)
 //Relase del boton del ratón, mandamos al jugador al punto de destino
 exec function StopFire(optional byte FireModeNum )
 {
+	local float Distancewithtarget;
+	local Vector2D  DistanceCheckMove;
+
 	//`Log("delta accumulated"@DeltaTimeAccumulated);
 	if(myHUD.bShowHUD)
 	{
@@ -144,13 +147,29 @@ exec function StopFire(optional byte FireModeNum )
 		{
 			bLeftMousePressed = false;
 
-			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+			Target = Attackable(TraceActor);
+			if(Target != none && Target != Pawn) 
 			{
-				//Our pawn has been ordered to a single location on mouse release.
-				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(0); //Movimiento simple
+				DistanceCheckMove.X = TraceActor.Location.X - Pawn.Location.X;
+				DistanceCheckMove.Y = TraceActor.Location.Y - Pawn.Location.Y;
+				Distancewithtarget = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
+
+				`log("DISTANCIA CON "$TraceActor.name$": "$Distancewithtarget);
+
+				if(Distancewithtarget >= 120)
+				{
+					`log("DENTRO MOVIMIENTO");
+					//Our pawn has been ordered to a single location on mouse release.
+					//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
+					else ExecutePathFindMove(); //Ejecutamos el pathfinding
+				}
+				else 
+				{`log("DENTRO ATAQUE");
+					Target = Attackable(TraceActor);
+					PushState('Attack');
+				}
 			}
-			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
 		}
 		
 		if(bRightMousePressed && FireModeNum == 1)
@@ -162,7 +181,7 @@ exec function StopFire(optional byte FireModeNum )
 			{
 				//Our pawn has been ordered to a single location on mouse release.
 				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(1); //Movimiento simple
+				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
 				else ExecutePathFindMove(); //Ejecutamos el pathfinding
 			}
 			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
@@ -173,23 +192,20 @@ exec function StopFire(optional byte FireModeNum )
 }
 
 //Movimiento sin pathfinding, ponemos al jugador en el estado MoveMouseClick
-function MovePawnToDestination(int buttonpressed)
+function MovePawnToDestination(optional byte FireModeNum)
 {	
-	if(buttonpressed == 0) //left mouse button
+	if(FireModeNum == 0) //left mouse button
 	{
-		if(Attackable(TraceActor) != none)
-		{
-			Target = Attackable(TraceActor);
-			PushState('Attack');
-			SetDestinationPosition(Target.Location);
-		}		
+		PushState('MoveToAttack');	
 	}
 	else //right mouse button
 	{
 		SetDestinationPosition(MouseHitWorldLocation);
-		PushState('MoveMouseClick');
 		PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+		PushState('MoveMouseClick');
 	}
+
+	
 }
 
 //Movimiento com pathfinding,Dependiendo de si hay path y de cuantos nodos tiene elegimos un movimiento más simple (PathFind) o desarrollado (NavMeshSeeking)
@@ -409,6 +425,35 @@ state NavMeshSeeking
 /******** ESTADO Atacar *************/
 state Attack
 {
+	event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
+    {
+        super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+        
+        `log("DENTRO");
+
+        if(Target.Health > 0)
+        {
+        	`log("VIVO "$Target.Health);
+        	GotoState('Attack');
+        }
+        else `log("Muerto");
+    }
+
+Begin:
+
+	if(Target != none)
+	{
+		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
+		`log("ATACO");
+	}
+	
+	PopState(); //Ya hemos llegado al destino quitamos el estado
+}
+/************************************/
+
+/******** ESTADO Mover a un target *************/
+state MoveToAttack
+{
 	event PoppedState()
 	{
 		//Si el timer de StopLingering estaba activo lo desabilitamos.
@@ -421,24 +466,46 @@ state Attack
 		SetTimer(3, false, nameof(StopLingering));
 	}
 
-Begin:
-	if(Target != none)
+	function PlayerMove(float DeltaTime)
 	{
-		while(!bPawnNearDestination) //Mientras no estemos cerca del destino
-		{
-			MoveTo(Target.Location);
-		}
-		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-		while(Target.health > 0)
-		{
-			if( Pawn.Weapon != None )
-			{
-				Pawn.Weapon.StartFire(0);
-			}
-		}
+		local Vector PawnXYLocation;
+		local Vector DestinationXYLocation;
+		local Vector    Destination;
+		local Vector2D  DistanceCheckMove;          
 
+		super.PlayerMove(DeltaTime);
+
+		//Calculamos distancia hasta el punto de destino
+		Destination = GetDestinationPosition();
+		DistanceCheckMove.X = Destination.X - Pawn.Location.X;
+		DistanceCheckMove.Y = Destination.Y - Pawn.Location.Y;
+		DistanceRemaining = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
+		
+		//`Log("DistanceCheckMove is"@DistanceCheckMove.X@DistanceCheckMove.Y);
+		//`Log("Distance remaining"@DistanceRemaining);
+		
+		bPawnNearDestination = DistanceRemaining < 120.0f;
+		//`Log("Has pawn come near destination ?"@bPawnNearDestination);
+
+		PawnXYLocation.X = Pawn.Location.X;
+		PawnXYLocation.Y = Pawn.Location.Y;
+
+		DestinationXYLocation.X = GetDestinationPosition().X;
+		DestinationXYLocation.Y = GetDestinationPosition().Y;
+
+		Pawn.SetRotation(RInterpTo(Pawn.Rotation, Rotator(DestinationXYLocation - PawnXYLocation), DeltaTime, RotationSpeed));
+
+		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
 	}
-	
+
+Begin:
+	while(!bPawnNearDestination || target != none) //Mientras no estemos cerca del destino
+	{
+		SetDestinationPosition(Target.Location);
+		MoveTo(GetDestinationPosition());
+	}
+	`log("FUERA");
+	PushState('Attack');
 	PopState(); //Ya hemos llegado al destino quitamos el estado
 }
 /************************************/

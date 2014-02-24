@@ -45,7 +45,6 @@ function bool FindNavMeshPath(Actor targetAct)
     return NavigationHandle.FindPath();
 }
 
-
 /******************************************************************
  *                      ESTADOS
  *****************************************************************/
@@ -64,8 +63,9 @@ auto state Idle
         else if(playerDistance < MocoPawn(Pawn).AttackRange) GotoState('Attack');
     }
 Begin:
-   ResetMove();
-   target = none;
+    BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Normal);
+    ResetMove();
+    target = none;
 }
 /*********************************/
 
@@ -76,7 +76,8 @@ state Follow
 
     ignores SeePlayer;
 Begin:
- 
+    BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Normal);
+
     if( NavigationHandle.ActorReachable( target) ) MoveToward( target, target, ,true );
     else if( FindNavMeshPath(target) )
     {
@@ -99,12 +100,25 @@ Begin:
 /******** ESTADO Explode *************/
 state Explode
 {
-    
+    event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
+    {
+        super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+
+        WorldInfo.MyDecalManager.SpawnDecal (DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak', // UMaterialInstance used for this decal.
+                                         Pawn.Location, // Decal spawned at the hit location.
+                                         Rotator(vect(0.0f,0.0f,-1.0f)), // Orient decal into the surface.
+                                         254, 254, // Decal size in tangent/binormal directions.
+                                         512, // Decal size in normal direction.
+                                         false, // If TRUE, use "NoClip" codepath.
+                                         FRand() * 360, // random rotation
+                                         ,true ,true //bProjectOnTerrain y bProjectOnSkeletalMeshes
+                            );
+
+        Pawn.Destroy();
+    }
 Begin:
-    ResetMove();
-    sleep(1);
-    Pawn.Destroy();
-    
+    MoveTo(Pawn.Location, target);
+    BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Die);    
 }
 /*********************************/
 
@@ -133,11 +147,12 @@ state Attack
             TimerAttack = 0;
 
             Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);
-            GotoState('Follow');
+            GotoState('Idle');
         }
     }
 
 Begin:
+    BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Attack);
     playerpos = target.Location;
     WorldInfo.MyDecalManager.SpawnDecal (DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak', // UMaterialInstance used for this decal.
                                          playerpos, // Decal spawned at the hit location.

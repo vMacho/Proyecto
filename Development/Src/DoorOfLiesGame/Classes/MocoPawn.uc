@@ -5,6 +5,10 @@ var (Moco) float AttackRange;
 var (Moco) float AttackTime;
 var (Moco) class<Actor> bulletClass;
 
+function AddDefaultInventory()
+{
+    InvManager.DiscardInventory();
+}
 
 DefaultProperties
 {

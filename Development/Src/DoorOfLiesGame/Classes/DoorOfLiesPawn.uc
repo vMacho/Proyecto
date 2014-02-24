@@ -12,8 +12,6 @@ var AnimNodeBlendList AnimNodeBlendList;
 enum EAnimState
 {
     ST_Normal,
-    ST_Sleeping,
-    ST_Die,
     ST_Attack
 };
 
@@ -44,8 +42,8 @@ function SetAnimationState(EAnimState eState)
     {
         if(eState == ST_Normal)
         {
-            if(Velocity.X != 0)  SetParticles(true);
-            else SetParticles(false);
+            /*if(Velocity.X != 0)  SetParticles(true);
+            else SetParticles(false);*/
         }
 
         AnimNodeBlendList.SetActiveChild(eState,0.25);
@@ -158,7 +156,6 @@ defaultproperties
 
     DrawScale = 3;
     bCanJump=false
-
 
     InventoryManagerClass=class'DoorOfLiesInventoryManager'
 

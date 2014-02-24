@@ -458,7 +458,7 @@ exec function MapZoomOut()
 
 DefaultProperties
 {
-    bDrawTraces = false;
+    bDrawTraces = true;
     bShowScores = false;
 
     MapDim=256

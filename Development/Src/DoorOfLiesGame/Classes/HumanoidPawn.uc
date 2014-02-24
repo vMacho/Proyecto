@@ -1,12 +1,27 @@
 class HumanoidPawn extends Attackable;
 
 var (Humanoid) float  distanceTosee;
+var (Humanoid) float  default_humanoid_GroundSpeed;
 
 
-function SlowGroud(float speedModifier)
+simulated event PostBeginPlay()
+{
+    super.PostBeginPlay();
+
+	default_humanoid_GroundSpeed = GroundSpeed;
+}
+
+function SlowGroud(float speedModifier, float time)
 {
 
-	GroundSpeed += speedModifier;
+	GroundSpeed -= speedModifier;
+	SetTimer(time, false, 'RestartSpeed');
+
+}
+
+function RestartSpeed()
+{
+	GroundSpeed = default_humanoid_GroundSpeed;
 }
 
 function SetWeapon(class <Weapon> arma)

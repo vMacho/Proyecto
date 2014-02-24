@@ -5,7 +5,8 @@
 
 class Bullet_Moco_slow extends Pawn;
    
-var (Weapon) float modSpeed;
+var (WeaponMoco) float modSpeed;
+var (WeaponMoco) float timeSlowing;
 
 simulated event PostBeginPlay()
 {
@@ -20,7 +21,7 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
     if(HumanoidPawn(Other) != none)
     {
-    	HumanoidPawn(Other).SlowGroud(modSpeed);
+    	HumanoidPawn(Other).SlowGroud(modSpeed, timeSlowing);
     }
 }
 
@@ -65,4 +66,5 @@ DefaultProperties
 
     health = 5
     modSpeed = 100
+    timeSlowing = 2
 }

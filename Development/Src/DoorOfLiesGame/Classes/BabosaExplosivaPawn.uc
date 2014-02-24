@@ -8,10 +8,50 @@ class BabosaExplosivaPawn extends MocoPawn
   placeable;
    
 var(BabosaExplosiva) class<AIController> NPCController;
- 
+var AnimNodeBlendList AnimNodeBlendList;
+
+enum EAnimState
+{
+    ST_Normal,
+    ST_Attack,
+    ST_Die
+};
+
+function SetAnimationState(EAnimState eState)
+{
+    if(AnimNodeBlendList != none)
+    {
+        AnimNodeBlendList.SetActiveChild(eState, 0.25f);
+    }
+}
+
+event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
+{
+    super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+
+    //bAnimationEnded=true;
+
+    if(Controller != none)
+    {
+        Controller.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+    }
+}
+
+simulated event Destroyed()
+{
+  Super.Destroyed();
+
+  AnimNodeBlendList = None;
+}
+
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
+}
+
+simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)
+{
+  AnimNodeBlendList = AnimNodeBlendList(SkelComp.FindAnimNode('AnimNodeBlendList'));
 }
 
 simulated event Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal)
@@ -25,9 +65,10 @@ DefaultProperties
 { 
     Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
         //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
-        SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc';
-        AnimTreeTemplate=AnimTree'Orco.AnimTree';
-        AnimSets(0)=AnimSet'Orco.SkeletalMesh.Idle';
+        SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc'
+        AnimTreeTemplate=AnimTree'Orco.AnimTree'
+        AnimSets(0)=AnimSet'Orco.SkeletalMesh.Idle'
+        
         HiddenGame=FALSE
         HiddenEditor=FALSE
     End Object
