@@ -27,7 +27,7 @@ defaultproperties
 {
   Begin Object Class=DrawSphereComponent Name=DrawSphere0
       SphereColor=(B=0,G=255,R=0,A=255)
-      SphereRadius=512.000000
+      SphereRadius=128.000000
   End Object
   MapExtentsComponent=DrawSphere0
   Components.Add(DrawSphere0)

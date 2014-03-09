@@ -118,7 +118,7 @@ defaultproperties
         SkeletalMesh=SkeletalMesh'Alice.SkeletalMesh.Alice';
         AnimTreeTemplate=AnimTree'Alice.AnimSet.AnimTree';
         AnimSets(0)=AnimSet'Alice.AnimSet.Anim_Alice';
-
+        Translation = (Z=-25)
     End Object
     Mesh=InitialSkeletalMesh;
     Components.Add(InitialSkeletalMesh);
@@ -126,12 +126,10 @@ defaultproperties
 
     Begin Object Name=CollisionCylinder
         CollisionRadius=+0034.000000
-        CollisionHeight=+0078.000000
-        BlockNonZeroExtent=true
-        BlockZeroExtent=true
-        BlockActors=false
-        CollideActors=true
+        CollisionHeight=+0120.000000
+        
     End Object
+    CylinderComponent=CollisionCylinder
 
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow //Particulas que nos siguen
         Template = ParticleSystem'HumoGato.EjemploParticulas';

@@ -44,6 +44,19 @@ var bool CurrentTargetIsReachable;
 var (DoorOfLies) float RotationSpeed;
 var PointerActor PointerCursor;
 
+struct Hability
+{
+   var bool active;
+   var bool activable;
+   var int manas;
+   var name name;
+};
+
+var Hability fire_hability;
+var Hability water_hability;
+var Hability wind_hability;
+var Hability stone_hability;
+
 
 function UpdateRotation( float DeltaTime ) //Truncamos la rotacion
 {
@@ -100,6 +113,26 @@ exec function PauseGame()
   	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
+exec function Q_Hability ()
+{
+	`log("Play Q -> " $ fire_hability.manas);
+}
+
+exec function W_Hability ()
+{
+	`log("Play W -> " $ water_hability.manas);
+}
+
+exec function E_Hability ()
+{
+	`log("Play E -> " $ stone_hability.manas);
+}
+
+exec function R_Hability ()
+{
+	`log("Play R -> " $ wind_hability.manas);
+}
+
 exec function ZoomCameraDown() //Scroll de la camara
 {
 	PlayerCamera.FreeCamDistance += (PlayerCamera.FreeCamDistance < DoorOfLiesPlayerCamera(PlayerCamera).DefaultFreeCamDistance) ? 64 : 0;
@@ -154,9 +187,7 @@ exec function StopFire(optional byte FireModeNum )
 				DistanceCheckMove.Y = TraceActor.Location.Y - Pawn.Location.Y;
 				Distancewithtarget = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
 
-				`log("DISTANCIA CON "$TraceActor.name$": "$Distancewithtarget);
-
-				if(Distancewithtarget >= 120)
+				if(Distancewithtarget >= 220) //Hacer dependible del target
 				{
 					`log("DENTRO MOVIMIENTO");
 					//Our pawn has been ordered to a single location on mouse release.
@@ -165,7 +196,8 @@ exec function StopFire(optional byte FireModeNum )
 					else ExecutePathFindMove(); //Ejecutamos el pathfinding
 				}
 				else 
-				{`log("DENTRO ATAQUE");
+				{
+					`log("DENTRO ATAQUE");
 					Target = Attackable(TraceActor);
 					PushState('Attack');
 				}
@@ -429,25 +461,25 @@ state Attack
     {
         super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
         
-        `log("DENTRO");
-
         if(Target.Health > 0)
         {
         	`log("VIVO "$Target.Health);
-        	GotoState('Attack');
+        	//GotoState('Attack');
         }
-        else `log("Muerto");
+        else
+        {
+        	`log("Muerto");
+        	
+        } 
     }
 
 Begin:
-
-	if(Target != none)
-	{
-		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-		`log("ATACO");
-	}
 	
-	PopState(); //Ya hemos llegado al destino quitamos el estado
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
+	`log("ATACO");
+
+
+	//PopState(); //Ya hemos llegado al destino quitamos el estado
 }
 /************************************/
 
@@ -456,14 +488,12 @@ state MoveToAttack
 {
 	event PoppedState()
 	{
-		//Si el timer de StopLingering estaba activo lo desabilitamos.
-		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering));
+		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering)); //Si el timer de StopLingering estaba activo lo desabilitamos.
 	}
 
 	event PushedState()
 	{
-		//Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
-		SetTimer(3, false, nameof(StopLingering));
+		SetTimer(3, false, nameof(StopLingering)); //Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
 	}
 
 	function PlayerMove(float DeltaTime)
@@ -481,36 +511,48 @@ state MoveToAttack
 		DistanceCheckMove.Y = Destination.Y - Pawn.Location.Y;
 		DistanceRemaining = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
 		
-		//`Log("DistanceCheckMove is"@DistanceCheckMove.X@DistanceCheckMove.Y);
-		//`Log("Distance remaining"@DistanceRemaining);
-		
-		bPawnNearDestination = DistanceRemaining < 120.0f;
-		//`Log("Has pawn come near destination ?"@bPawnNearDestination);
+		bPawnNearDestination = DistanceRemaining < 200.0f; //Hacer dependible del target
 
 		PawnXYLocation.X = Pawn.Location.X;
 		PawnXYLocation.Y = Pawn.Location.Y;
 
-		DestinationXYLocation.X = GetDestinationPosition().X;
-		DestinationXYLocation.Y = GetDestinationPosition().Y;
+		if(bPawnNearDestination) ResetMove();
+		else
+		{
+			DestinationXYLocation.X = GetDestinationPosition().X;
+			DestinationXYLocation.Y = GetDestinationPosition().Y;
 
-		Pawn.SetRotation(RInterpTo(Pawn.Rotation, Rotator(DestinationXYLocation - PawnXYLocation), DeltaTime, RotationSpeed));
+			Pawn.SetRotation(RInterpTo(Pawn.Rotation, Rotator(DestinationXYLocation - PawnXYLocation), DeltaTime, RotationSpeed));
 
-		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
+			DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
+		}
 	}
 
 Begin:
-	while(!bPawnNearDestination || target != none) //Mientras no estemos cerca del destino
+	
+
+
+	while(!bPawnNearDestination && target != none) //Mientras no estemos cerca del destino
 	{
 		SetDestinationPosition(Target.Location);
+		
 		MoveTo(GetDestinationPosition());
 	}
-	`log("FUERA");
+
 	PushState('Attack');
-	PopState(); //Ya hemos llegado al destino quitamos el estado
+	//PopState(); //Ya hemos llegado al destino quitamos el estado	
 }
 /************************************/
 
 /******************************************************************/
+
+function ResetMove()
+{
+    TempDest = vect(0,0,0);
+    Velocity = vect(0,0,0);
+    Acceleration = vect(0,0,0);
+    MoveTimer = -1.0;
+}
 
 simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, int Damage, class<DamageType> damageType, vector Momentum)
 {

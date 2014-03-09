@@ -222,43 +222,53 @@ function DrawHUD()
         
 
         // Background
-        Canvas.SetPos( 0, 0 );
+        /*Canvas.SetPos( 0, 0 );
         Canvas.SetDrawColor( 0, 0, 0, 128 );
         Canvas.DrawRect( 500, 500 );
 
         Canvas.Font = class'Engine'.Static.GetSmallFont();
-        Canvas.SetDrawColor(0,255,0,255);
+        Canvas.SetDrawColor(0,255,0,255);*/
 
         // Camera
         Camera = PlayerOwner.PlayerCamera;
-        Canvas.SetPos( 10, 10 );
+        Canvas.SetPos( 10, 410 );
         Canvas.DrawText( "CameraPos: " $ Camera.Location );
-        Canvas.SetPos( 10, 25 );
+        Canvas.SetPos( 10, 425 );
         Canvas.DrawText( "CameraRot: " $ Camera.Rotation );
 
         // Pawn
         Pawn = PLayerOwner.Pawn;
-        Canvas.SetPos( 10, 40 );
+        Canvas.SetPos( 10, 440 );
         Canvas.DrawText( "PawnPos: " $ Pawn.Location );
-        Canvas.SetPos( 10, 55 );
+        Canvas.SetPos( 10, 455 );
         Canvas.DrawText( "PawnRot: " $ Pawn.Rotation );
 
         // Actor
-        Canvas.SetPos( 10, 70 );
+        Canvas.SetPos( 10, 470 );
         Canvas.DrawText( "Velocity: " $ Pawn.Velocity );
-        Canvas.SetPos( 10, 85 );
+        Canvas.SetPos( 10, 485 );
         Canvas.DrawText( "Acceleration: " $ Pawn.Acceleration );
 
 
-        Canvas.SetPos( 10, 100 );
+        Canvas.SetPos( 10, 500 );
         Canvas.DrawText( "Mouse X: " $ GetMouseCoordinates().X);
-        Canvas.SetPos( 10, 115 );
+        Canvas.SetPos( 10, 515 );
         Canvas.DrawText( "Mouse Y: " $ GetMouseCoordinates().Y );
 
 
         Canvas.DrawColor = MakeColor(255,183,11,255); //Cambiamos el color con el que se dibuja el mensaje
-        Canvas.SetPos( 10, 130 );
+        Canvas.SetPos( 10, 530 );
         Canvas.DrawText( StringMessage, false, , , TextRenderInfo );
+
+
+        Canvas.SetPos( 10, 545 );
+        Canvas.DrawText( "Fire Manas:" $ DoorOfLiesPlayerController(PlayerOwner).fire_hability.manas);
+        Canvas.SetPos( 10, 560 );
+        Canvas.DrawText( "Water Manas: " $ DoorOfLiesPlayerController(PlayerOwner).water_hability.manas);
+        Canvas.SetPos( 10, 575 );
+        Canvas.DrawText( "Stone Manas:" $ DoorOfLiesPlayerController(PlayerOwner).stone_hability.manas);
+        Canvas.SetPos( 10, 590 );
+        Canvas.DrawText( "Wind Manas:" $ DoorOfLiesPlayerController(PlayerOwner).wind_hability.manas);
     }
 
     if(!MyHudHealth.IsGamePaused) DrawMap(); //COMPROBAR DIVISION POR CERO
@@ -461,7 +471,7 @@ DefaultProperties
     bDrawTraces = true;
     bShowScores = false;
 
-    MapDim=256
+    MapDim=128
     BoxSize=12
     PlayerColors(0)=(R=255,G=255,B=255,A=255)
     PlayerColors(1)=(R=96,G=255,B=96,A=255)
