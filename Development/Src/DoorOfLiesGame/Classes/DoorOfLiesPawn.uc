@@ -113,12 +113,12 @@ defaultproperties
         BlockRigidBody=true;
         CollideActors=true;
         BlockZeroExtent=true;
-        PhysicsAsset=PhysicsAsset'Alice.SkeletalMesh.Alice_Physics'
+        PhysicsAsset=PhysicsAsset'Alice.SkeletalMesh.Player_base_Physics'
 
-        SkeletalMesh=SkeletalMesh'Alice.SkeletalMesh.Alice';
-        AnimTreeTemplate=AnimTree'Alice.AnimSet.AnimTree';
-        AnimSets(0)=AnimSet'Alice.AnimSet.Anim_Alice';
-        Translation = (Z=-25)
+        SkeletalMesh=SkeletalMesh'Alice.SkeletalMesh.Player_base'
+        AnimTreeTemplate=AnimTree'Alice.AnimSet.Player_AnimTree'
+        AnimSets(0)=AnimSet'Alice.AnimSet.Player_anim'
+        Translation = (Z=-50)
     End Object
     Mesh=InitialSkeletalMesh;
     Components.Add(InitialSkeletalMesh);
@@ -152,7 +152,7 @@ defaultproperties
     End Object
     Components.Add(Foco)
 
-    DrawScale = 3;
+    DrawScale = 1.5;
     bCanJump=false
 
     InventoryManagerClass=class'DoorOfLiesInventoryManager'

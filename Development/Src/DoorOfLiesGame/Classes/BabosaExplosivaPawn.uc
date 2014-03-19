@@ -7,7 +7,6 @@ class BabosaExplosivaPawn extends MocoPawn
   ClassGroup(EnemyBabosa)
   placeable;
    
-var(BabosaExplosiva) class<AIController> NPCController;
 var AnimNodeBlendList AnimNodeBlendList;
 
 enum EAnimState
@@ -42,11 +41,6 @@ simulated event Destroyed()
   Super.Destroyed();
 
   AnimNodeBlendList = None;
-}
-
-simulated event PostBeginPlay()
-{
-    super.PostBeginPlay();
 }
 
 simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)

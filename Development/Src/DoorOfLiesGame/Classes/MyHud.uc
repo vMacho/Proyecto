@@ -208,27 +208,21 @@ function DrawHUD()
 {
     //local Vector Direction;
     local string StringMessage;
-
+    local int i;
     local Camera Camera;
-    local Pawn   Pawn;  
+    local Pawn   Pawn;
+    local DoorOfLiesPlayerController playerControllerOwner;
     
+    playerControllerOwner = DoorOfLiesPlayerController(PlayerOwner);
+
     if(bDrawTraces) //Si bDrawTraces == true se dibujan
     {
         //Display traced actor class under mouse cursor for fun :)
-        if(DoorOfLiesPlayerController(PlayerOwner).TraceActor != none)
+        if(playerControllerOwner.TraceActor != none)
         {
-            StringMessage = "Actor selected:"@DoorOfLiesPlayerController(PlayerOwner).TraceActor.class;
+            StringMessage = "Actor selected:"@playerControllerOwner.TraceActor.class;
         }
-        
-
-        // Background
-        /*Canvas.SetPos( 0, 0 );
-        Canvas.SetDrawColor( 0, 0, 0, 128 );
-        Canvas.DrawRect( 500, 500 );
-
-        Canvas.Font = class'Engine'.Static.GetSmallFont();
-        Canvas.SetDrawColor(0,255,0,255);*/
-
+       
         // Camera
         Camera = PlayerOwner.PlayerCamera;
         Canvas.SetPos( 10, 410 );
@@ -260,15 +254,13 @@ function DrawHUD()
         Canvas.SetPos( 10, 530 );
         Canvas.DrawText( StringMessage, false, , , TextRenderInfo );
 
-
-        Canvas.SetPos( 10, 545 );
-        Canvas.DrawText( "Fire Manas:" $ DoorOfLiesPlayerController(PlayerOwner).fire_hability.manas);
-        Canvas.SetPos( 10, 560 );
-        Canvas.DrawText( "Water Manas: " $ DoorOfLiesPlayerController(PlayerOwner).water_hability.manas);
-        Canvas.SetPos( 10, 575 );
-        Canvas.DrawText( "Stone Manas:" $ DoorOfLiesPlayerController(PlayerOwner).stone_hability.manas);
-        Canvas.SetPos( 10, 590 );
-        Canvas.DrawText( "Wind Manas:" $ DoorOfLiesPlayerController(PlayerOwner).wind_hability.manas);
+        for(i = 0; i < playerControllerOwner.powers.length; i++ )
+        {
+            Canvas.SetPos( 10, 565 + ( i * 15) );
+            Canvas.DrawText( playerControllerOwner.powers[i].name 
+                             $ " Manas:" $ playerControllerOwner.powers[i].active 
+                             $ " Cooldown:" $ playerControllerOwner.powers[i].actual_cooldown);
+        }
     }
 
     if(!MyHudHealth.IsGamePaused) DrawMap(); //COMPROBAR DIVISION POR CERO

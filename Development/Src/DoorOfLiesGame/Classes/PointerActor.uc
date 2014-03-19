@@ -5,6 +5,16 @@
 class PointerActor extends StaticMeshActor
 				   placeable;
  
+var float health;
+
+event Tick(float DeltaTime)
+{
+    super.Tick(DeltaTime);
+
+    health -= DeltaTime;
+
+    if(health <= 0) Destroy();
+}
 
 DefaultProperties
 { 
@@ -19,4 +29,6 @@ DefaultProperties
 
 	bStatic = false;
 	bNoDelete = false;
+
+	health = 1;
 }

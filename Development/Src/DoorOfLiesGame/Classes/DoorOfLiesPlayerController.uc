@@ -37,12 +37,10 @@ var Vector NavigationDestination;
 var Vector2D DistanceCheck;
 
 var Attackable Target;
-var bool CurrentTargetIsReachable;
 
 /*****************************************************************/
 
 var (DoorOfLies) float RotationSpeed;
-var PointerActor PointerCursor;
 
 struct Hability
 {
@@ -50,23 +48,36 @@ struct Hability
    var bool activable;
    var int manas;
    var name name;
+   var float cooldown;
+   var float actual_cooldown;
+   var delegate <AttackHability> Attack;
+   var delegate <DefendHability> Defend;
 };
 
-var Hability fire_hability;
-var Hability water_hability;
-var Hability wind_hability;
-var Hability stone_hability;
-
-
-function UpdateRotation( float DeltaTime ) //Truncamos la rotacion
+enum Habilities
 {
-	
+	Fuego,
+	Agua,
+	Tierra,
+	Aire
+};
+
+var array <Hability> powers;
+
+/*****************************************************************/
+
+simulated event PostBeginPlay()
+{
+    super.PostBeginPlay();
+
+    Set_Habilities();
 }
 
-function ProcessViewRotation( float DeltaTime, out Rotator out_ViewRotation, Rotator DeltaRot ) //Truncamos la rotacion
-{
-	
-}
+//Truncamos la rotacion
+function UpdateRotation( float DeltaTime ) {}
+
+//Truncamos la rotacion
+function ProcessViewRotation( float DeltaTime, out Rotator out_ViewRotation, Rotator DeltaRot ) {}
 
 
 //Cada frame
@@ -74,38 +85,22 @@ event PlayerTick( float DeltaTime )
 {
 	super.PlayerTick(DeltaTime);
 
-	if(bRightMousePressed) //Usamos el boton derecho para movernos
+	if(bRightMousePressed)
 	{
-		DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que dicho boton ha estado pulsado
+		DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que el boton DRCH ha estado pulsado
 
 		SetDestinationPosition(MouseHitWorldLocation); //Actualizamos la posicion mientras el boton siga presionado
 		
-		//If its not already pushed, push the state that makes the pawn run to destination
-		//until mouse is unpressed. Make sure we do it after the allocated time for a single
-		//click or else two states could be pushed simultaneously
 		if(DeltaTimeAccumulated >= 0.13f)
 		{
-			if(!IsInState('MoveMousePressedAndHold'))
-			{
-				//`Log("Pushed MoveMousePressedAndHold state");
-				PushState('MoveMousePressedAndHold');
-			}
-			else
-			{
-				//Specify execution of current state, starting from label Begin:, ignoring all events and
-				//keeping our current pushed state MoveMousePressedAndHold. To better understand why this 
-				//continually execute each frame from our Begin: label
-				GotoState('MoveMousePressedAndHold', 'Begin', false, true);
-			}
+			if(!IsInState('MoveMousePressedAndHold')) PushState('MoveMousePressedAndHold');
+			else GotoState('MoveMousePressedAndHold', 'Begin', false, true);
 		}
 	}
 
-	if(bLeftMousePressed) //Usamos el boton Izquierdo para atacar, si pulsamos sobre un enemigo primero va hasta su posicion
-	{
-		DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que dicho boton ha estado pulsado
-	}
+	if(bLeftMousePressed) DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que el boton IZQ ha estado pulsado
 
-	//DumpStateStack();
+	UpdateHabilities(DeltaTime);
 }
 
 exec function PauseGame()
@@ -113,25 +108,194 @@ exec function PauseGame()
   	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
+/************** HABILIDADES *************************/
+function Set_Habilities()
+{
+	local int i;
+
+	powers.length = 4;
+
+	for(i = 0; i < powers.length; i++ )
+	{
+		powers[i].activable = true;
+		powers[i].active = false;
+
+		powers[i].manas = 10;
+	}
+
+	powers[Fuego].name = 'Fuego';
+    powers[Fuego].cooldown = 4;
+    powers[Fuego].Attack = AttackFire;
+    powers[Fuego].Defend = DefenseFire;
+
+    powers[Agua].name = 'Agua';
+    powers[Agua].cooldown = 5;
+    powers[Agua].Attack = AttackWater;
+    powers[Agua].Defend = DefenseWater;
+
+
+    powers[Tierra].name = 'Tierra';
+    powers[Tierra].cooldown = 6;
+    powers[Tierra].Attack = AttackStone;
+    powers[Tierra].Defend = DefenseStone;
+
+
+    powers[Aire].name = 'Aire';
+    powers[Aire].cooldown = 3;
+    powers[Aire].Attack = AttackWind;
+    powers[Aire].Defend = DefenseWind;
+
+}
+
+function bool active_habilty ()
+{
+	local int i;
+	for(i = 0; i < powers.length; i++ ) powers[i].active = false;
+
+	return true;
+}
+
 exec function Q_Hability ()
 {
-	`log("Play Q -> " $ fire_hability.manas);
+	powers[Fuego].active = active_habilty();
 }
 
 exec function W_Hability ()
 {
-	`log("Play W -> " $ water_hability.manas);
+	powers[Agua].active = active_habilty();
 }
 
 exec function E_Hability ()
 {
-	`log("Play E -> " $ stone_hability.manas);
+	powers[Tierra].active = active_habilty();
 }
 
 exec function R_Hability ()
 {
-	`log("Play R -> " $ wind_hability.manas);
+	powers[Aire].active = active_habilty();
 }
+
+simulated delegate AttackFire() 
+{	
+	local Fireball bola;
+	
+	`log("Spawn de Bola de Fuego");
+
+	bola = Spawn(class 'Fireball',,, pawn.location);
+	bola.targetPoint = MouseHitWorldLocation;
+	bola.emitterPawn = pawn;
+}
+
+delegate AttackHability();
+delegate DefendHability();
+
+simulated delegate AttackWater() 
+{	
+	`log("Spawn de ATAQUE Agua");
+}
+
+simulated delegate AttackStone() 
+{	
+	`log("Spawn de ATAQUE Tierra");
+}
+
+simulated delegate AttackWind() 
+{	
+	`log("Spawn de ATAQUE Aire");
+}
+
+simulated delegate DefenseFire() 
+{	
+	local Firewall muro;
+	
+	`log("Spawn de Muro de Fuego");
+
+	muro = Spawn(class 'Firewall',,, MouseHitWorldLocation);
+	muro.emitterPawn = pawn;
+}
+
+simulated delegate DefenseWater() 
+{	
+	`log("Spawn de DEFENSA Agua");
+}
+
+simulated delegate DefenseStone() 
+{	
+	`log("Spawn de DEFENSA Tierra");
+}
+
+simulated delegate DefenseWind() 
+{	
+	`log("Spawn de DEFENSA Aire");
+}
+
+exec function PlayAggressiveHability ()
+{
+	local int i;
+	local bool is_in_hability;
+
+	is_in_hability = false;
+
+	for(i = 0; i < powers.length; i++ )
+	{
+		if(powers[i].active)
+		{
+			if(powers[i].actual_cooldown <= 0)
+			{
+				if(powers[i].manas > 0)
+				{
+					is_in_hability = true;
+					powers[i].manas --;
+					powers[i].actual_cooldown = powers[i].cooldown;
+					//powers[i].Attack();
+
+					`log("Ataque " $ powers[i].name);
+				}
+				else `log("NO TENGO MANAS PARA " $ powers[i].name);
+			}
+			else `log("ESTOY EN COOLDOWN PARA " $ powers[i].name);
+		}
+	}
+
+	if(!is_in_hability)
+	{
+		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
+		`log("ATAQUE BASE");
+	}
+}
+
+exec function PlayDefensiveHability ()
+{
+	local int i;
+	
+	for(i = 0; i < powers.length; i++ )
+	{
+		if(powers[i].active)
+		{
+			if(powers[i].actual_cooldown <= 0)
+			{
+				if(powers[i].manas > 0)
+				{
+					powers[i].manas --;
+					powers[i].actual_cooldown = powers[i].cooldown;
+					//powers[i].Defend();
+
+					`log("Defensa " $ powers[i].name);
+				}
+				else `log("NO TENGO MANAS PARA " $ powers[i].name);
+			}
+			else `log("ESTOY EN COOLDOWN PARA " $ powers[i].name);
+		}
+	}
+}
+
+function UpdateHabilities( float DeltaTime )
+{
+	local int i;
+	for(i = 0; i < powers.length; i++ ) if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
+}
+
+/*******************************************************************/
 
 exec function ZoomCameraDown() //Scroll de la camara
 {
@@ -142,15 +306,11 @@ exec function ZoomCameraUp() //Scroll de la camara
 	PlayerCamera.FreeCamDistance -= (PlayerCamera.FreeCamDistance > 128) ? 64 : 0;
 }
 
-
 //Se lanza cuando pulsamos un boton del ratón y da el destino al que dirigirse
 exec function StartFire(optional byte FireModeNum)
 {
 	if(myHUD.bShowHUD)
 	{
-		//Pop all states to get pawn in auto moving to mouse target location.
-		PopState(true);
-		
 		//Set timer
 		DeltaTimeAccumulated = 0;
 
@@ -171,8 +331,7 @@ exec function StopFire(optional byte FireModeNum )
 {
 	local float Distancewithtarget;
 	local Vector2D  DistanceCheckMove;
-
-	//`Log("delta accumulated"@DeltaTimeAccumulated);
+	
 	if(myHUD.bShowHUD)
 	{
 		//Reseteamos el tiempo de pulsado de los botones del ratón
@@ -190,16 +349,14 @@ exec function StopFire(optional byte FireModeNum )
 				if(Distancewithtarget >= 220) //Hacer dependible del target
 				{
 					`log("DENTRO MOVIMIENTO");
-					//Our pawn has been ordered to a single location on mouse release.
-					//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+					
 					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
 					else ExecutePathFindMove(); //Ejecutamos el pathfinding
 				}
-				else 
+				else
 				{
-					`log("DENTRO ATAQUE");
 					Target = Attackable(TraceActor);
-					PushState('Attack');
+					if( !IsInState('Attack') )  GotoState('Attack');
 				}
 			}
 		}
@@ -228,16 +385,14 @@ function MovePawnToDestination(optional byte FireModeNum)
 {	
 	if(FireModeNum == 0) //left mouse button
 	{
-		PushState('MoveToAttack');	
+		GotoState('MoveToAttack');	
 	}
 	else //right mouse button
 	{
 		SetDestinationPosition(MouseHitWorldLocation);
-		PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
-		PushState('MoveMouseClick');
-	}
-
-	
+		Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+		if(!IsInState('MoveMouseClick')) PushState('MoveMouseClick');
+	}	
 }
 
 //Movimiento com pathfinding,Dependiendo de si hay path y de cuantos nodos tiene elegimos un movimiento más simple (PathFind) o desarrollado (NavMeshSeeking)
@@ -248,7 +403,7 @@ function ExecutePathFindMove()
 	if( RouteCache.Length > 0 ) PushState('PathFind');
 	else PushState('NavMeshSeeking');
 
-	PointerCursor = Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+	Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
 }
 
 //Función que prevee que el jugador no se quede atascado con un obstaculo, al cabo de un tiempo el jugador se para
@@ -295,14 +450,21 @@ function PlayerMove(float DeltaTime)
  *****************************************************************/
 
 /******** ESTADO Mover a un punto *************/
+auto state Idle
+{
+
+Begin:
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
+}
+/************************************/
+
+/******** ESTADO Mover a un punto *************/
 state MoveMouseClick
 {
 	event PoppedState()
 	{
 		//Si el timer de StopLingering estaba activo lo desabilitamos.
 		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering));
-
-		PointerCursor.Destroy();
 	}
 
 	event PushedState()
@@ -324,7 +486,7 @@ Begin:
 /******** ESTADO Movimiento continuado (Botón derecho pulsado)*************/
 state MoveMousePressedAndHold
 {
-	event PoppedState() {}
+	event PoppedState(){}
 
 Begin:
 	
@@ -336,11 +498,6 @@ Begin:
 /******** ESTADO Que Busca el camino por pathfindig simple*************/
 state PathFind
 {
-	event PoppedState()
-	{
-		PointerCursor.Destroy();
-	}
-
 	Begin:
 	    if( RouteCache.Length > 0 )
 	    {
@@ -360,11 +517,6 @@ state PathFind
 /******** ESTADO Que mueve al jugador por pathfindig simple*************/
 state ScriptedMove
 {
-	event PoppedState()
-	{
-		PointerCursor.Destroy();
-	}
-
 	Begin:
         while(ScriptedMoveTarget != none && Pawn != none && !Pawn.ReachedDestination(ScriptedMoveTarget))
         {
@@ -406,11 +558,6 @@ state NavMeshSeeking
 
 	    return NavigationHandle.FindPath();
     }
-
-    event PoppedState()
-	{
-		PointerCursor.Destroy();
-	}
 
     Begin:
         NavigationDestination = GetDestinationPosition();
@@ -459,7 +606,7 @@ state Attack
 {
 	event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
     {
-        super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+        super.OnAnimEnd(SeqNode, PlayerTime, ExcessTime);
         
         if(Target.Health > 0)
         {
@@ -469,15 +616,11 @@ state Attack
         else
         {
         	`log("Muerto");
-        	
         } 
     }
 
 Begin:
-	
-	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-	`log("ATACO");
-
+	PlayAggressiveHability();
 
 	//PopState(); //Ya hemos llegado al destino quitamos el estado
 }
@@ -539,8 +682,7 @@ Begin:
 		MoveTo(GetDestinationPosition());
 	}
 
-	PushState('Attack');
-	//PopState(); //Ya hemos llegado al destino quitamos el estado	
+	GotoState('Attack');
 }
 /************************************/
 
