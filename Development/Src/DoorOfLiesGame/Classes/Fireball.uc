@@ -45,7 +45,7 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
     if(Attackable(Other) != none && emitterPawn != none && emitterPawn != Other)
     {
-    	//Attackable(Other).setDamage;
+    	Attackable(Other).Burn(damage);
         `log("FIREBALL EXPLOTA CON " $Other.name);
         Die();
     }

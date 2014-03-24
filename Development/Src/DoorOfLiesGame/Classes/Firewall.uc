@@ -26,14 +26,13 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 
     if(Attackable(Other) != none && emitterPawn != none && emitterPawn != Other)
     {
-    	//Attackable(Other).setDamage;
+    	Attackable(Other).Burn(damage);
         `log("FIREWALL QUEMA A " $Other.name);
     }
 }
 
 function Die()
 {
-    `log("MUERE FIREWALL");
 	Destroy();
 }
 
@@ -64,7 +63,7 @@ DefaultProperties
     Components.Add(CalabazaMesh)
  
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow
-        Template = ParticleSystem'ParticlePumpkin.Particles.ParticlePumpkin'
+        Template = ParticleSystem'HumoGato.EjemploParticulas';
     End Object
     Components.Add(ParticlesFollow)
     

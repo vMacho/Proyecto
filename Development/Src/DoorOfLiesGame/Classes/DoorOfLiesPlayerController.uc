@@ -50,6 +50,8 @@ struct Hability
    var name name;
    var float cooldown;
    var float actual_cooldown;
+   var float seconds_spawn_wall;
+   var float default_seconds_spawn_wall;
    var delegate <AttackHability> Attack;
    var delegate <DefendHability> Defend;
 };
@@ -121,6 +123,9 @@ function Set_Habilities()
 		powers[i].active = false;
 
 		powers[i].manas = 10;
+
+		powers[i].seconds_spawn_wall = 2;
+		powers[i].default_seconds_spawn_wall = 2;
 	}
 
 	powers[Fuego].name = 'Fuego';
@@ -207,11 +212,29 @@ simulated delegate AttackWind()
 simulated delegate DefenseFire() 
 {	
 	local Firewall muro;
-	
+	local vector viewpoint;
+
+	viewpoint.X = MouseHitWorldLocation.X - Pawn.Location.X;
+	viewpoint.Y = MouseHitWorldLocation.Y - Pawn.Location.Y;
+
+
+	Pawn.SetRotation(rotator(viewpoint));
+
+	powers[Fuego].seconds_spawn_wall -= GetTimerRate('DefenseFire');
+
 	`log("Spawn de Muro de Fuego");
 
 	muro = Spawn(class 'Firewall',,, MouseHitWorldLocation);
 	muro.emitterPawn = pawn;
+	
+	if(powers[Fuego].seconds_spawn_wall > 0) SetTimer(0.2, false, 'DefenseFire');
+	else powers[Fuego].seconds_spawn_wall = powers[Fuego].default_seconds_spawn_wall;
+}
+
+function StopWallSpawning() 
+{	
+	ClearAllTimers();
+	`log("LIMPIO");
 }
 
 simulated delegate DefenseWater() 
@@ -233,7 +256,8 @@ exec function PlayAggressiveHability ()
 {
 	local int i;
 	local bool is_in_hability;
-
+	local delegate <AttackHability> Temp;
+`log("DENTRO AGGRESIVE");
 	is_in_hability = false;
 
 	for(i = 0; i < powers.length; i++ )
@@ -247,7 +271,8 @@ exec function PlayAggressiveHability ()
 					is_in_hability = true;
 					powers[i].manas --;
 					powers[i].actual_cooldown = powers[i].cooldown;
-					//powers[i].Attack();
+					Temp = powers[i].Attack;
+					Temp();
 
 					`log("Ataque " $ powers[i].name);
 				}
@@ -267,7 +292,8 @@ exec function PlayAggressiveHability ()
 exec function PlayDefensiveHability ()
 {
 	local int i;
-	
+	local delegate <DefendHability> Temp;
+	`log("DENTRO DEFENSIVE");
 	for(i = 0; i < powers.length; i++ )
 	{
 		if(powers[i].active)
@@ -278,7 +304,8 @@ exec function PlayDefensiveHability ()
 				{
 					powers[i].manas --;
 					powers[i].actual_cooldown = powers[i].cooldown;
-					//powers[i].Defend();
+					Temp = powers[i].Defend;
+					Temp();
 
 					`log("Defensa " $ powers[i].name);
 				}
@@ -306,11 +333,17 @@ exec function ZoomCameraUp() //Scroll de la camara
 	PlayerCamera.FreeCamDistance -= (PlayerCamera.FreeCamDistance > 128) ? 64 : 0;
 }
 
+exec function SelectAction()
+{
+
+}
+
 //Se lanza cuando pulsamos un boton del ratón y da el destino al que dirigirse
 exec function StartFire(optional byte FireModeNum)
 {
 	if(myHUD.bShowHUD)
 	{
+		ResetMove();
 		//Set timer
 		DeltaTimeAccumulated = 0;
 
@@ -338,7 +371,12 @@ exec function StopFire(optional byte FireModeNum )
 		if(bLeftMousePressed && FireModeNum == 0)
 		{
 			bLeftMousePressed = false;
-
+		}
+		
+		if(bRightMousePressed && FireModeNum == 1)
+		{
+			bRightMousePressed = false;
+		
 			Target = Attackable(TraceActor);
 			if(Target != none && Target != Pawn) 
 			{
@@ -348,10 +386,10 @@ exec function StopFire(optional byte FireModeNum )
 
 				if(Distancewithtarget >= 220) //Hacer dependible del target
 				{
-					`log("DENTRO MOVIMIENTO");
+					`log("DENTRO MOVIMIENTO DE ATAQUE");
 					
-					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
-					else ExecutePathFindMove(); //Ejecutamos el pathfinding
+					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) GotoState('MoveToAttack');	 //Movimiento simple
+					//else ExecutePathFindMove(); //Ejecutamos el pathfinding
 				}
 				else
 				{
@@ -359,21 +397,18 @@ exec function StopFire(optional byte FireModeNum )
 					if( !IsInState('Attack') )  GotoState('Attack');
 				}
 			}
-		}
-		
-		if(bRightMousePressed && FireModeNum == 1)
-		{
-			bRightMousePressed = false;
-		
-			//Si no estamos cerca del destino y hemos pulsado el botón derecho del ratón
-			if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+			else
 			{
-				//Our pawn has been ordered to a single location on mouse release.
-				//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-				if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
-				else ExecutePathFindMove(); //Ejecutamos el pathfinding
+				//Si no estamos cerca del destino y hemos pulsado el botón derecho del ratón
+				if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+				{
+					//Our pawn has been ordered to a single location on mouse release.
+					//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
+					else ExecutePathFindMove(); //Ejecutamos el pathfinding
+				}
+				else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
 			}
-			else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
 		}
 		
 		DeltaTimeAccumulated = 0; //Reseteamos el tiempo de pulsado del botón
@@ -383,16 +418,9 @@ exec function StopFire(optional byte FireModeNum )
 //Movimiento sin pathfinding, ponemos al jugador en el estado MoveMouseClick
 function MovePawnToDestination(optional byte FireModeNum)
 {	
-	if(FireModeNum == 0) //left mouse button
-	{
-		GotoState('MoveToAttack');	
-	}
-	else //right mouse button
-	{
-		SetDestinationPosition(MouseHitWorldLocation);
-		Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
-		if(!IsInState('MoveMouseClick')) PushState('MoveMouseClick');
-	}	
+	SetDestinationPosition(MouseHitWorldLocation);
+	Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+	if(!IsInState('MoveMouseClick')) PushState('MoveMouseClick');
 }
 
 //Movimiento com pathfinding,Dependiendo de si hay path y de cuantos nodos tiene elegimos un movimiento más simple (PathFind) o desarrollado (NavMeshSeeking)
@@ -449,8 +477,8 @@ function PlayerMove(float DeltaTime)
  *                      ESTADOS
  *****************************************************************/
 
-/******** ESTADO Mover a un punto *************/
-auto state Idle
+/******** ESTADO Idle *************/
+auto state Idle extends PlayerWalking
 {
 
 Begin:
@@ -672,8 +700,7 @@ state MoveToAttack
 	}
 
 Begin:
-	
-
+	ResetMove();
 
 	while(!bPawnNearDestination && target != none) //Mientras no estemos cerca del destino
 	{
@@ -690,10 +717,17 @@ Begin:
 
 function ResetMove()
 {
+	ClearAllTimers();
     TempDest = vect(0,0,0);
     Velocity = vect(0,0,0);
     Acceleration = vect(0,0,0);
     MoveTimer = -1.0;
+}
+
+function SetDamage(float damage)
+{
+	Pawn.Health -= damage;
+	MyHud(myHUD).MyHudHealth.SetDamage(damage);
 }
 
 simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, int Damage, class<DamageType> damageType, vector Momentum)

@@ -90,7 +90,12 @@ function AddDefaultInventory()
     InvManager.DiscardInventory();
 }
 
+auto state Idle
+{
 
+    Begin:
+        Controller.GotoState('Idle');
+}
 
 defaultproperties
 {
@@ -158,5 +163,7 @@ defaultproperties
     InventoryManagerClass=class'DoorOfLiesInventoryManager'
 
     bCanPickupInventory = true
+
+    //GroundSpeed = 200
 }
 

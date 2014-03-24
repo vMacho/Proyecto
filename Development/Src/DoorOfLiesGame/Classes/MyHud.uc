@@ -261,6 +261,9 @@ function DrawHUD()
                              $ " Manas:" $ playerControllerOwner.powers[i].active 
                              $ " Cooldown:" $ playerControllerOwner.powers[i].actual_cooldown);
         }
+
+        Canvas.SetPos( 10, 630 );
+        Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
     }
 
     if(!MyHudHealth.IsGamePaused) DrawMap(); //COMPROBAR DIVISION POR CERO
@@ -469,4 +472,6 @@ DefaultProperties
     PlayerColors(1)=(R=96,G=255,B=96,A=255)
     TileSize=0.4
     MapPosition=(X=0.000000,Y=0.000000)
+
+    
 }
