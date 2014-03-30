@@ -117,7 +117,7 @@ state Explode
         Pawn.Destroy();
     }
 Begin:
-    MoveTo(Pawn.Location, target);
+    MoveTo(Pawn.Location, Pawn);
     BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Die);    
 }
 /*********************************/

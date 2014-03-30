@@ -6,6 +6,7 @@ Define Modelo - Animaciones - Afecta Luz o no
 class DoorOfLiesPawn extends HumanoidPawn;
 
 var (Player) SpotLightComponent flashlight;
+var (Player) int strength;
 var ParticleSystemComponent ParticlesFollowUs;
 var AnimNodeBlendList AnimNodeBlendList;
 
@@ -46,7 +47,7 @@ function SetAnimationState(EAnimState eState)
             else SetParticles(false);*/
         }
 
-        AnimNodeBlendList.SetActiveChild(eState,0.25);
+        AnimNodeBlendList.SetActiveChild( eState, 0.25 );
     }
 }
 
@@ -164,6 +165,8 @@ defaultproperties
 
     bCanPickupInventory = true
 
+    strength = 5;
+    
     //GroundSpeed = 200
 }
 

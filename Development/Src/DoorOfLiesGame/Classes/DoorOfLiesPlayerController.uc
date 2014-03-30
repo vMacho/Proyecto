@@ -129,7 +129,7 @@ function Set_Habilities()
 	}
 
 	powers[Fuego].name = 'Fuego';
-    powers[Fuego].cooldown = 4;
+    powers[Fuego].cooldown = 5;
     powers[Fuego].Attack = AttackFire;
     powers[Fuego].Defend = DefenseFire;
 
@@ -152,32 +152,46 @@ function Set_Habilities()
 
 }
 
-function bool active_habilty ()
+function change_habilty (int Hability_to_active)
 {
 	local int i;
-	for(i = 0; i < powers.length; i++ ) powers[i].active = false;
-
-	return true;
+	for(i = 0; i < powers.length; i++ )
+	{
+		if( i != Hability_to_active ) powers[i].active = false;
+		else 
+		{
+			if( powers[i].active == true ) powers[i].active = false;
+			else
+			{
+				if(powers[i].actual_cooldown <= 0) powers[i].active = true;
+				else
+				{
+					powers[i].active = false;
+					`log("ESTA EN COOLDOWN");
+				}
+			}
+		}
+	}
 }
 
 exec function Q_Hability ()
 {
-	powers[Fuego].active = active_habilty();
+	change_habilty(Fuego);
 }
 
 exec function W_Hability ()
 {
-	powers[Agua].active = active_habilty();
+	change_habilty(Agua);
 }
 
 exec function E_Hability ()
 {
-	powers[Tierra].active = active_habilty();
+	change_habilty(Tierra);
 }
 
 exec function R_Hability ()
 {
-	powers[Aire].active = active_habilty();
+	change_habilty(Aire);
 }
 
 simulated delegate AttackFire() 
@@ -234,7 +248,6 @@ simulated delegate DefenseFire()
 function StopWallSpawning() 
 {	
 	ClearAllTimers();
-	`log("LIMPIO");
 }
 
 simulated delegate DefenseWater() 
@@ -252,14 +265,13 @@ simulated delegate DefenseWind()
 	`log("Spawn de DEFENSA Aire");
 }
 
-exec function PlayAggressiveHability ()
+exec function bool PlayAggressiveHability ()
 {
 	local int i;
-	local bool is_in_hability;
 	local delegate <AttackHability> Temp;
-`log("DENTRO AGGRESIVE");
-	is_in_hability = false;
-
+	local bool result;
+	result = false;
+	
 	for(i = 0; i < powers.length; i++ )
 	{
 		if(powers[i].active)
@@ -268,11 +280,12 @@ exec function PlayAggressiveHability ()
 			{
 				if(powers[i].manas > 0)
 				{
-					is_in_hability = true;
 					powers[i].manas --;
 					powers[i].actual_cooldown = powers[i].cooldown;
 					Temp = powers[i].Attack;
 					Temp();
+					powers[i].active = false;
+					result = true;
 
 					`log("Ataque " $ powers[i].name);
 				}
@@ -282,11 +295,7 @@ exec function PlayAggressiveHability ()
 		}
 	}
 
-	if(!is_in_hability)
-	{
-		DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-		`log("ATAQUE BASE");
-	}
+	return result;
 }
 
 exec function PlayDefensiveHability ()
@@ -306,6 +315,7 @@ exec function PlayDefensiveHability ()
 					powers[i].actual_cooldown = powers[i].cooldown;
 					Temp = powers[i].Defend;
 					Temp();
+					powers[i].active = false; //desactivamos la habilidad
 
 					`log("Defensa " $ powers[i].name);
 				}
@@ -335,7 +345,7 @@ exec function ZoomCameraUp() //Scroll de la camara
 
 exec function SelectAction()
 {
-
+	Target = Attackable(TraceActor);
 }
 
 //Se lanza cuando pulsamos un boton del ratón y da el destino al que dirigirse
@@ -376,38 +386,46 @@ exec function StopFire(optional byte FireModeNum )
 		if(bRightMousePressed && FireModeNum == 1)
 		{
 			bRightMousePressed = false;
-		
-			Target = Attackable(TraceActor);
-			if(Target != none && Target != Pawn) 
+			
+			if( !PlayAggressiveHability () ) //Si no esta ejecutando un ataque de habilidad
 			{
-				DistanceCheckMove.X = TraceActor.Location.X - Pawn.Location.X;
-				DistanceCheckMove.Y = TraceActor.Location.Y - Pawn.Location.Y;
-				Distancewithtarget = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
-
-				if(Distancewithtarget >= 220) //Hacer dependible del target
+				Target = Attackable(TraceActor);
+				if(Target != none && Target != Pawn) 
 				{
-					`log("DENTRO MOVIMIENTO DE ATAQUE");
-					
-					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) GotoState('MoveToAttack');	 //Movimiento simple
-					//else ExecutePathFindMove(); //Ejecutamos el pathfinding
+					DistanceCheckMove.X = TraceActor.Location.X - Pawn.Location.X;
+					DistanceCheckMove.Y = TraceActor.Location.Y - Pawn.Location.Y;
+					Distancewithtarget = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
+
+					if(Distancewithtarget >= 220) //Hacer dependible del target
+					{
+						`log("DENTRO MOVIMIENTO DE ATAQUE");
+						
+						if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) GotoState('MoveToAttack');	 //Movimiento simple
+						//else ExecutePathFindMove(); //Ejecutamos el pathfinding
+					}
+					else
+					{
+						Target = Attackable(TraceActor);
+						if( !IsInState('Attack') )  GotoState('Attack');
+					}
 				}
 				else
 				{
-					Target = Attackable(TraceActor);
-					if( !IsInState('Attack') )  GotoState('Attack');
+					//Si no estamos cerca del destino y hemos pulsado el botón derecho del ratón
+					if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
+					{
+						//Our pawn has been ordered to a single location on mouse release.
+						//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
+						if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
+						else ExecutePathFindMove(); //Ejecutamos el pathfinding
+					}
+					else
+					{
+
+						if( !IsInState('MoveMousePressedAndHold') ) PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
+						else GotoState('Idle');
+					}
 				}
-			}
-			else
-			{
-				//Si no estamos cerca del destino y hemos pulsado el botón derecho del ratón
-				if(!bPawnNearDestination && DeltaTimeAccumulated < 0.13f)
-				{
-					//Our pawn has been ordered to a single location on mouse release.
-					//Simulate a firing bullet. If it would be ok (clear sight) then we can move to and simply ignore pathfinding.
-					if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) MovePawnToDestination(FireModeNum); //Movimiento simple
-					else ExecutePathFindMove(); //Ejecutamos el pathfinding
-				}
-				else PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
 			}
 		}
 		
@@ -419,8 +437,10 @@ exec function StopFire(optional byte FireModeNum )
 function MovePawnToDestination(optional byte FireModeNum)
 {	
 	SetDestinationPosition(MouseHitWorldLocation);
+
 	Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
-	if(!IsInState('MoveMouseClick')) PushState('MoveMouseClick');
+
+	if( !IsInState('MoveMouseClick') ) PushState('MoveMouseClick');
 }
 
 //Movimiento com pathfinding,Dependiendo de si hay path y de cuantos nodos tiene elegimos un movimiento más simple (PathFind) o desarrollado (NavMeshSeeking)
@@ -468,8 +488,6 @@ function PlayerMove(float DeltaTime)
 	DestinationXYLocation.Y = GetDestinationPosition().Y;
 
 	Pawn.SetRotation(RInterpTo(Pawn.Rotation, Rotator(DestinationXYLocation - PawnXYLocation), DeltaTime, RotationSpeed));
-
-	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
 }
 
 
@@ -482,6 +500,7 @@ auto state Idle extends PlayerWalking
 {
 
 Begin:
+	ResetMove();
 	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
 }
 /************************************/
@@ -502,24 +521,25 @@ state MoveMouseClick
 	}
 
 Begin:
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
 	while(!bPawnNearDestination) //Mientras no estemos cerca del destino
 	{
 		MoveTo(GetDestinationPosition());
 	}
 
-	PopState(); //Ya hemos llegado al destino quitamos el estado
+	GotoState('Idle');
 }
 /************************************/
 
 /******** ESTADO Movimiento continuado (Botón derecho pulsado)*************/
 state MoveMousePressedAndHold
 {
-	event PoppedState(){}
+	event PoppedState(){ ResetMove(); }
 
 Begin:
-	
-	if(!bPawnNearDestination)  MoveTo(GetDestinationPosition()); //Mientras no estemos cerca del destino
-	else PopState();
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
+	if( !bPawnNearDestination )  MoveTo( GetDestinationPosition() ); //Mientras no estemos cerca del destino
+	else GotoState('Idle');
 }
 /************************************/
 
@@ -560,6 +580,7 @@ state ScriptedMove
                 {
                     MoveToward(MoveTarget, MoveTarget);
                     SetDestinationPosition(MoveTarget.Location);
+                    DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
                 }
                 else
                 {
@@ -605,7 +626,11 @@ state NavMeshSeeking
                 	//Nos movemos al primer nodo de la ruta escogida
                     if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) )
                     {
-                        if (!NavigationHandle.SuggestMovePreparation( TempDest,self)) MoveTo( TempDest, None, , true );
+                        if (!NavigationHandle.SuggestMovePreparation( TempDest,self))
+                        {
+                        	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
+                        	MoveTo( TempDest, None, , true );
+                        }
                     }
                 }
                 DistanceCheck.X = NavigationDestination.X - Pawn.Location.X;
@@ -636,21 +661,22 @@ state Attack
     {
         super.OnAnimEnd(SeqNode, PlayerTime, ExcessTime);
         
+        Target.SetDamage( DoorOfLiesPawn(Pawn).strength );
+
         if(Target.Health > 0)
         {
         	`log("VIVO "$Target.Health);
-        	//GotoState('Attack');
+        	GotoState('Attack');
         }
         else
         {
         	`log("Muerto");
+        	GotoState('Idle');
         } 
     }
 
 Begin:
-	PlayAggressiveHability();
-
-	//PopState(); //Ya hemos llegado al destino quitamos el estado
+	DoorOfLiesPawn(Pawn).SetAnimationState(1);
 }
 /************************************/
 
@@ -659,12 +685,12 @@ state MoveToAttack
 {
 	event PoppedState()
 	{
-		if(IsTimerActive(nameof(StopLingering))) ClearTimer(nameof(StopLingering)); //Si el timer de StopLingering estaba activo lo desabilitamos.
+		if( IsTimerActive( nameof( StopLingering ) ) ) ClearTimer( nameof( StopLingering ) ); //Si el timer de StopLingering estaba activo lo desabilitamos.
 	}
 
 	event PushedState()
 	{
-		SetTimer(3, false, nameof(StopLingering)); //Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
+		SetTimer( 3, false, nameof( StopLingering ) ); //Añadimos el timer para el StopLingering (Para al jugador al cabo de un rato)
 	}
 
 	function PlayerMove(float DeltaTime)

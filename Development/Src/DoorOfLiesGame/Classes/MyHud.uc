@@ -206,8 +206,6 @@ function DrawTraceDebugRays()
 //Dibuja variables despues del postrender
 function DrawHUD()
 {
-    //local Vector Direction;
-    local string StringMessage;
     local int i;
     local Camera Camera;
     local Pawn   Pawn;
@@ -216,13 +214,7 @@ function DrawHUD()
     playerControllerOwner = DoorOfLiesPlayerController(PlayerOwner);
 
     if(bDrawTraces) //Si bDrawTraces == true se dibujan
-    {
-        //Display traced actor class under mouse cursor for fun :)
-        if(playerControllerOwner.TraceActor != none)
-        {
-            StringMessage = "Actor selected:"@playerControllerOwner.TraceActor.class;
-        }
-       
+    {       
         // Camera
         Camera = PlayerOwner.PlayerCamera;
         Canvas.SetPos( 10, 410 );
@@ -252,17 +244,20 @@ function DrawHUD()
 
         Canvas.DrawColor = MakeColor(255,183,11,255); //Cambiamos el color con el que se dibuja el mensaje
         Canvas.SetPos( 10, 530 );
-        Canvas.DrawText( StringMessage, false, , , TextRenderInfo );
+        Canvas.DrawText( "Actor selected:" @ playerControllerOwner.TraceActor.class, false, , , TextRenderInfo );
+
+        Canvas.SetPos( 10, 545 );
+        Canvas.DrawText( "Target: " $ playerControllerOwner.Target );
 
         for(i = 0; i < playerControllerOwner.powers.length; i++ )
         {
-            Canvas.SetPos( 10, 565 + ( i * 15) );
+            Canvas.SetPos( 10, 575 + ( i * 15) );
             Canvas.DrawText( playerControllerOwner.powers[i].name 
                              $ " Manas:" $ playerControllerOwner.powers[i].active 
                              $ " Cooldown:" $ playerControllerOwner.powers[i].actual_cooldown);
         }
 
-        Canvas.SetPos( 10, 630 );
+        Canvas.SetPos( 10, 645 );
         Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
     }
 

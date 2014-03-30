@@ -59,9 +59,9 @@ DefaultProperties
 { 
     Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
         //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
-        SkeletalMesh=SkeletalMesh'Orco.SkeletalMesh.micro_orc'
-        AnimTreeTemplate=AnimTree'Orco.AnimTree'
-        AnimSets(0)=AnimSet'Orco.SkeletalMesh.Idle'
+        SkeletalMesh=SkeletalMesh'BabosaExplosiva.SkeletalMesh.babosa_bones'
+        AnimTreeTemplate=AnimTree'BabosaExplosiva.animaciones.Babosa_AnimTree'
+        AnimSets(0)=AnimSet'BabosaExplosiva.animaciones.BabosaAnim'
         
         HiddenGame=FALSE
         HiddenEditor=FALSE
@@ -85,7 +85,7 @@ DefaultProperties
     bCanJump=false
  
     GroundSpeed=200.0 //Para hacerlo mas lento que el player
-    DrawScale = 0.5
+    DrawScale = 4
     ControllerClass=class'BabosaExplosivaController'
 
     AttackRange = 600
