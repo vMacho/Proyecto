@@ -28,8 +28,6 @@ event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
 {
     super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
 
-    //bAnimationEnded=true;
-
     if(Controller != none)
     {
         Controller.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
@@ -57,6 +55,8 @@ simulated event Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal
 
 DefaultProperties
 { 
+    Components.Remove(Sprite)
+
     Begin Object Class=SkeletalMeshComponent Name=EnemySkeletalMesh
         //PhysicsAsset=PhysicsAsset'CH_AnimCorrupt.Mesh.SK_CH_Corrupt_Male_Physics'
         SkeletalMesh=SkeletalMesh'BabosaExplosiva.SkeletalMesh.babosa_bones'

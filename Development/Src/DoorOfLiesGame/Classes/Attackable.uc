@@ -1,6 +1,14 @@
 class Attackable extends Pawn;
 
 var float time_burnning;
+var (Humanoid) float  default_humanoid_GroundSpeed;
+
+simulated event PostBeginPlay()
+{
+    super.PostBeginPlay();
+
+    default_humanoid_GroundSpeed = GroundSpeed;
+}
 
 function Burn(float damage)
 {
@@ -26,6 +34,18 @@ state Burnnig
 	}
 	Begin:
 		`log("SE QUEMA");
+}
+
+function SlowGroud(float speedModifier, float time)
+{
+	ClearAllTimers();
+	GroundSpeed -= speedModifier;
+	SetTimer(time, false, 'RestartSpeed');
+}
+
+function RestartSpeed()
+{
+	GroundSpeed = default_humanoid_GroundSpeed;
 }
 
 DefaultProperties

@@ -8,13 +8,18 @@ class DoorOfLiesPawn extends HumanoidPawn;
 var (Player) SpotLightComponent flashlight;
 var (Player) int strength;
 var ParticleSystemComponent ParticlesFollowUs;
-var AnimNodeBlendList AnimNodeBlendList;
 
 enum EAnimState
 {
     ST_Normal,
-    ST_Attack
+    ST_Attack,
+    ST_Die
 };
+
+function SetAnimationState(EAnimState eState)
+{
+    if(AnimNodeBlendList != none) AnimNodeBlendList.SetActiveChild(eState, 0.25f);
+}
 
 simulated event PostBeginPlay() //Al empezar
 {
@@ -37,32 +42,6 @@ exec function SetParticles(bool mode)
    ParticlesFollowUs.SetActive(mode);
 }
 
-function SetAnimationState(EAnimState eState)
-{
-    if(AnimNodeBlendList != none)
-    {
-        if(eState == ST_Normal)
-        {
-            /*if(Velocity.X != 0)  SetParticles(true);
-            else SetParticles(false);*/
-        }
-
-        AnimNodeBlendList.SetActiveChild( eState, 0.25 );
-    }
-}
-
-event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
-{
-    super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
-
-    //bAnimationEnded=true;
-
-    if(Controller != none)
-    {
-        Controller.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
-    }
-}
-
 simulated event Vector GetWeaponStartTraceLocation(optional Weapon CurrentWeapon)
 {
    super.GetWeaponStartTraceLocation();
@@ -70,21 +49,6 @@ simulated event Vector GetWeaponStartTraceLocation(optional Weapon CurrentWeapon
    return Weapon.Location;
 }
 
-/* 
- * Called after initializing the AnimTree for the given SkeletalMeshComponent that has this Actor as its Owner
- * this is a good place to cache references to skeletal controllers, etc that the Actor modifies
- */
-simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)
-{
-  AnimNodeBlendList = AnimNodeBlendList(SkelComp.FindAnimNode('AnimNodeBlendList'));
-}
-
-simulated event Destroyed()
-{
-  Super.Destroyed();
-
-  AnimNodeBlendList = None;
-}
 
 function AddDefaultInventory()
 {

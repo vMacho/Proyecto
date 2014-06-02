@@ -93,7 +93,7 @@ event PlayerTick( float DeltaTime )
 
 		SetDestinationPosition(MouseHitWorldLocation); //Actualizamos la posicion mientras el boton siga presionado
 		
-		if(DeltaTimeAccumulated >= 0.13f)
+		if(DeltaTimeAccumulated >= 0.33f)
 		{
 			if(!IsInState('MoveMousePressedAndHold')) PushState('MoveMousePressedAndHold');
 			else GotoState('MoveMousePressedAndHold', 'Begin', false, true);
@@ -374,6 +374,7 @@ exec function StopFire(optional byte FireModeNum )
 {
 	local float Distancewithtarget;
 	local Vector2D  DistanceCheckMove;
+	local Actor local_target;
 	
 	if(myHUD.bShowHUD)
 	{
@@ -389,9 +390,11 @@ exec function StopFire(optional byte FireModeNum )
 			
 			if( !PlayAggressiveHability () ) //Si no esta ejecutando un ataque de habilidad
 			{
-				Target = Attackable(TraceActor);
-				if(Target != none && Target != Pawn) 
+				local_target = Attackable(TraceActor);
+				if(local_target != none && local_target != Pawn) 
 				{
+					Target = Attackable(TraceActor);
+
 					DistanceCheckMove.X = TraceActor.Location.X - Pawn.Location.X;
 					DistanceCheckMove.Y = TraceActor.Location.Y - Pawn.Location.Y;
 					Distancewithtarget = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
@@ -403,11 +406,7 @@ exec function StopFire(optional byte FireModeNum )
 						if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) GotoState('MoveToAttack');	 //Movimiento simple
 						//else ExecutePathFindMove(); //Ejecutamos el pathfinding
 					}
-					else
-					{
-						Target = Attackable(TraceActor);
-						if( !IsInState('Attack') )  GotoState('Attack');
-					}
+					else if( !IsInState('Attack') )  GotoState('Attack');
 				}
 				else
 				{
@@ -657,26 +656,44 @@ state NavMeshSeeking
 /******** ESTADO Atacar *************/
 state Attack
 {
+	local Vector    Destination;
+	local Vector2D  DistanceCheckMove;    
+	local float distancia;
+
 	event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
     {
         super.OnAnimEnd(SeqNode, PlayerTime, ExcessTime);
         
-        Target.SetDamage( DoorOfLiesPawn(Pawn).strength );
+        Destination = Target.location;
+    	DistanceCheckMove.X = Destination.X - Pawn.Location.X;
+		DistanceCheckMove.Y = Destination.Y - Pawn.Location.Y;
+		distancia = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
 
-        if(Target.Health > 0)
+        if(distancia <= 200 )
         {
-        	`log("VIVO "$Target.Health);
-        	GotoState('Attack');
+        	Target.SetDamage( DoorOfLiesPawn(Pawn).strength );
+
+	        if(Target.Health > 0)
+	        {
+	        	`log("VIVO "$Target.Health);
+				
+	        	if(distancia < 200) GotoState('Attack');
+	        	else GotoState('MoveToAttack');
+	        }
+	        else
+	        {
+	        	`log("Muerto");
+	        	GotoState('Idle');
+	        } 
         }
-        else
-        {
-        	`log("Muerto");
-        	GotoState('Idle');
-        } 
+        else GotoState('MoveToAttack');
     }
 
 Begin:
-	DoorOfLiesPawn(Pawn).SetAnimationState(1);
+	ResetMove();
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
+	MoveTo(GetDestinationPosition());
+	
 }
 /************************************/
 
@@ -695,8 +712,8 @@ state MoveToAttack
 
 	function PlayerMove(float DeltaTime)
 	{
-		local Vector PawnXYLocation;
-		local Vector DestinationXYLocation;
+		local Vector 	PawnXYLocation;
+		local Vector 	DestinationXYLocation;
 		local Vector    Destination;
 		local Vector2D  DistanceCheckMove;          
 

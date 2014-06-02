@@ -6,7 +6,6 @@ Se definen las funciones del flash
 Class DoorOfLiesHud extends GFxMoviePlayer;
 
 var GFxObject MC_Root;
-var GFxObject _HUDHealth;
 var private vector2d _mousePosition;
 var bool IsGamePaused;
 
@@ -21,30 +20,43 @@ event bool Start(optional bool StartPaused = false) //Constructor
 
 function UpdateLife(int Health) //Se pone la vida igual a un valor
 {
+	local GFxObject _HUDHealth;
+
 	MC_Root = GetVariableObject("root");
 
 	if(MC_Root != none)
 	{
-		_HUDHealth = MC_Root.GetObject("_HUDHealth");
+		_HUDHealth = MC_Root.GetObject("_HUDHealthtop");
 
 		if(_HUDHealth != none)
 		{
-			_HUDHealth.setFloat("currentHealth", Health);
+			_HUDHealth = _HUDHealth.GetObject("_HUDHealth");
+
+			if(_HUDHealth != none)
+			{
+				_HUDHealth.setFloat("currentHealth", Health);
+			}
 		}
 	}
 }
 
 function SetDamage(int damage) //Se resta a la vida un valor
 {
+	local GFxObject _HUDHealth;
 	MC_Root = GetVariableObject("root");
 
 	if(MC_Root != none)
 	{
-		_HUDHealth = MC_Root.GetObject("_HUDHealth");
+		_HUDHealth = MC_Root.GetObject("_HUDHealthtop");
 
 		if(_HUDHealth != none)
 		{
-			_HUDHealth.setFloat("SetDamage", damage);
+			_HUDHealth = _HUDHealth.GetObject("_HUDHealth");
+
+			if(_HUDHealth != none)
+			{
+				_HUDHealth.setFloat("SetDamage", damage);
+			}
 		}
 	}
 }
@@ -90,6 +102,6 @@ function vector2d GetMouseCoordinates()
 
 DefaultProperties
 {
-	MovieInfo = SwfMovie'pack_DoorOfLiesHud.HealthHud'
+	MovieInfo = SwfMovie'DoorOfLiesHud_gabas.HealthHud'
 	bDisplayWithHudOff = false;
 }

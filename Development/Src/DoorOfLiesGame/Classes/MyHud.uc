@@ -207,26 +207,22 @@ function DrawTraceDebugRays()
 function DrawHUD()
 {
     local int i;
-    local Camera Camera;
     local Pawn   Pawn;
     local DoorOfLiesPlayerController playerControllerOwner;
     
     playerControllerOwner = DoorOfLiesPlayerController(PlayerOwner);
 
     if(bDrawTraces) //Si bDrawTraces == true se dibujan
-    {       
-        // Camera
-        Camera = PlayerOwner.PlayerCamera;
-        Canvas.SetPos( 10, 410 );
-        Canvas.DrawText( "CameraPos: " $ Camera.Location );
-        Canvas.SetPos( 10, 425 );
-        Canvas.DrawText( "CameraRot: " $ Camera.Rotation );
-
+    {
         // Pawn
         Pawn = PLayerOwner.Pawn;
-        Canvas.SetPos( 10, 440 );
+
+        Canvas.SetPos( 10, 410 );
+        Canvas.DrawText( "Destino: " $ playerControllerOwner.GetDestinationPosition() );
+
+        Canvas.SetPos( 10, 425 );
         Canvas.DrawText( "PawnPos: " $ Pawn.Location );
-        Canvas.SetPos( 10, 455 );
+        Canvas.SetPos( 10, 440 );
         Canvas.DrawText( "PawnRot: " $ Pawn.Rotation );
 
         // Actor
@@ -247,7 +243,10 @@ function DrawHUD()
         Canvas.DrawText( "Actor selected:" @ playerControllerOwner.TraceActor.class, false, , , TextRenderInfo );
 
         Canvas.SetPos( 10, 545 );
-        Canvas.DrawText( "Target: " $ playerControllerOwner.Target );
+        if(playerControllerOwner.Target != none)
+        {
+            Canvas.DrawText( "Target: " $ playerControllerOwner.Target $ " State: " $ playerControllerOwner.Target.Controller.GetStateName() );
+        }
 
         for(i = 0; i < playerControllerOwner.powers.length; i++ )
         {

@@ -19,10 +19,7 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
 {
     super.Touch(Other, OtherComp, HitLocation, HitNormal);
 
-    if(HumanoidPawn(Other) != none)
-    {
-    	HumanoidPawn(Other).SlowGroud(modSpeed, timeSlowing);
-    }
+    if(Attackable(Other) != none) Attackable(Other).SlowGroud(modSpeed, timeSlowing);
 }
 
 function Die()

@@ -77,20 +77,23 @@ state Follow
     ignores SeePlayer;
 Begin:
     BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Normal);
-
-    if( NavigationHandle.ActorReachable( target) ) MoveToward( target, target, ,true );
-    else if( FindNavMeshPath(target) )
-    {
-        NavigationHandle.SetFinalDestination(target.Location);
-        
-        if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ) MoveTo( TempDest, target ); //Nos movemos hasta el primer nodo del Path
-        else MoveTo(Pawn.Location, Pawn);
-    }
-    else GotoState('Idle');
     
     playerDistance = VSize(Pawn.Location - target.Location);
         
-    if(playerDistance > MocoPawn(Pawn).AttackRange && playerDistance < MocoPawn(Pawn).distanceTosee) goto 'Begin';
+    if(playerDistance > MocoPawn(Pawn).AttackRange && playerDistance < MocoPawn(Pawn).distanceTosee)
+    {
+        if( NavigationHandle.ActorReachable( target) ) MoveToward( target, target, ,true );
+        else if( FindNavMeshPath(target) )
+        {
+            NavigationHandle.SetFinalDestination(target.Location);
+            
+            if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ) MoveTo( TempDest, target ); //Nos movemos hasta el primer nodo del Path
+            else MoveTo(Pawn.Location, Pawn);
+        }
+        else GotoState('Idle');
+
+        goto 'Begin';
+    }
     else if(playerDistance < MocoPawn(Pawn).AttackRange) GotoState('Attack');
     else GotoState('Idle');
     
@@ -134,8 +137,6 @@ state Attack
         super.Tick(DeltaTime);
 
         TimerAttack += DeltaTime;
-
-        playerDistance = VSize(Pawn.Location - target.Location);
         
         if(TimerAttack >= MocoPawn(Pawn).AttackTime) Shoot();
     }
@@ -147,7 +148,11 @@ state Attack
             TimerAttack = 0;
 
             Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);
-            GotoState('Idle');
+            
+            playerDistance = VSize(Pawn.Location - target.Location);
+
+            if( playerDistance <= MocoPawn(Pawn).AttackRange ) GotoState('Attack');
+            else GotoState('Idle');
         }
     }
 

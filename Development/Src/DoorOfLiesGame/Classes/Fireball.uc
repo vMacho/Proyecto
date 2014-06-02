@@ -9,33 +9,27 @@ var (Hability) float speed;
 var (Hability) float damage;
 var (Hability) float duration;
 var Vector targetPoint;
-var bool bPawnNearDestination;
+var Vector inicialLocation;
 var Actor emitterPawn;
 
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    bPawnNearDestination = false;
+    inicialLocation = Location;
 
     SetTimer(duration, false, 'Die');
 }
 
 simulated event Tick(float Deltatime)
 {
-    local float DistanceRemaining;
-    local Vector2D DistanceCheckMove;
-    local Vector newLocation;
+    local Vector newLocation, direccion;
     super.Tick(Deltatime);
 
-    DistanceCheckMove.X = targetPoint.X - Location.X;
-    DistanceCheckMove.Y = targetPoint.Y - Location.Y;
-    DistanceRemaining = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
-
-    if( DistanceRemaining < 100.0f ) Die();
+    direccion = Normal(targetPoint - inicialLocation);
 
     newLocation = Location;
-    newLocation += Normal(targetPoint - Location) * speed * Deltatime;
+    newLocation += direccion * speed * Deltatime;
     SetLocation(newLocation);
 }
 
@@ -91,7 +85,7 @@ DefaultProperties
     bCollideActors = true;
     bBlockActors = false;
 
-    speed = 500
+    speed = 1500
     damage = 5
-    duration = 2
+    duration = 3
 }

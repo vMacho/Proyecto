@@ -9,7 +9,7 @@
 		
 		public function Health() {
 			_inicialHeight = _mask.height;
-			currentHealth = 100;
+			currentHealth = 50;
 		}
 		
 		public function set currentHealth(health:Number)
