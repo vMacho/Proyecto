@@ -17,7 +17,7 @@ enum EAnimState
 
 function SetAnimationState(EAnimState eState)
 {
-    if(AnimNodeBlendList != none) AnimNodeBlendList.SetActiveChild(eState, 0.25f);
+    if(AnimNodeBlendList != none) AnimNodeBlendList.SetActiveChild(eState, 0.1f);
 }
 
 DefaultProperties
@@ -38,10 +38,11 @@ DefaultProperties
 
     CollisionType=COLLIDE_BlockAll
     Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
-        CollisionRadius=+75
+        CollisionRadius=50
         CollisionHeight=+50
     End Object
     CylinderComponent=CollisionCylinder
+    Components.Add(CollisionCylinder) 
 
     bJumpCapable = false
     bCanJump     = false

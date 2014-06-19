@@ -53,6 +53,7 @@ DefaultProperties
     Begin Object Name=CollisionCylinder
         CollisionHeight = 44.000000
         CollisionRadius = 75.000000
+        
     End Object
  
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow

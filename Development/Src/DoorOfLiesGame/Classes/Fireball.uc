@@ -36,7 +36,7 @@ simulated event Tick(float Deltatime)
 event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
 {
     super.Touch(Other, OtherComp, HitLocation, HitNormal);
-
+    `log("FIREBALL CHOCA" $Other.name);
     if(Attackable(Other) != none && emitterPawn != none && emitterPawn != Other)
     {
     	Attackable(Other).Burn(damage);
@@ -54,7 +54,7 @@ function Die()
 
 DefaultProperties
 { 
-    Components.Remove(Sprite)
+    //Components.Remove(Sprite)
     
     Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment //Como afecta la luz al modelo
         ModShadowFadeoutTime=0.25
@@ -65,27 +65,34 @@ DefaultProperties
     End Object
     Components.Add(MyLightEnvironment)
 
-    Begin Object Name=CollisionCylinder
-        CollisionHeight = 44.000000
-        CollisionRadius = 75.000000
-    End Object
+    
 
+    
     Begin Object Class=StaticMeshComponent Name=CalabazaMesh
         LightEnvironment=MyLightEnvironment;
         StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'
-        Scale = 5   
+        Scale = 5 
+        
     End Object
+
     Components.Add(CalabazaMesh)
- 
+    Begin Object Name=CollisionCylinder
+        CollisionHeight = 44.000000
+        CollisionRadius = 75.000000
+       HiddenGame=FALSE 
+    End Object
+    Components.Add(CollisionCylinder)
     Begin Object Class=ParticleSystemComponent Name=ParticlesFollow
-        Template = ParticleSystem'ParticlePumpkin.Particles.ParticlePumpkin'
+        Template = ParticleSystem'rotura.Particles.ggwp'
+        Scale= 2
+        
     End Object
     Components.Add(ParticlesFollow)
     
     bCollideActors = true;
     bBlockActors = false;
 
-    speed = 1500
+    speed = 1
     damage = 5
-    duration = 3
+    duration = 30
 }

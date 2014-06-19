@@ -53,7 +53,7 @@ function vector GetVectorizedRotator()
 DefaultProperties
 {
 	Begin Object Class=ArrowComponent Name=Arrow
-		ArrowColor = (B=80,G=80,R=200,A=255)
+		ArrowColor = (B=255,G=80,R=200,A=255)
 		ArrowSize = 1.000000
 		Name = "North Heading"
 	End Object

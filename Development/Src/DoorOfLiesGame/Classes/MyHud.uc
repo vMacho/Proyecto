@@ -10,21 +10,43 @@ var DoorOfLiesHud MyHudHealth;
 
 var MU_Minimap GameMinimap;
 var Float TileSize;
+var public int aumento;
 var Int MapDim;
 var Int BoxSize;
 var Color PlayerColors[2];
+var ReticuleActor Reticule;
+var MaterialInterface ReticuleMaterial;
+var MaterialInterface ReticuleClickMaterial;
+var MaterialInterface ReticuleAreaMaterial;
+var vector2D last_position_clicked;
+var public vector2d ajustemouse_;
+var public Vector MouseOrigin_, MouseDir_;
+var Font Fuente;
 
+var name estadoEne;
+
+
+struct StrucTexto
+{
+   var string texto;
+   var int duracion;
+   var vector location;
+};
+var array<StrucTexto> textos;
 
 simulated event PostBeginPlay() //Al empezar
 {
+    
     super.PostBeginPlay();
     `Log("The custom hud is alive !");
+   
 
     MyHudHealth = new class'DoorOfLiesHud';
     MyHudHealth.Start();
     MyHudHealth.UpdateLife(DoorOfLiesPlayerController(PlayerOwner).Pawn.Health);
 
     GameMinimap = DoorOfLiesGame(WorldInfo.Game).GameMinimap;
+
 }
 
 //Activa o desactiva ver los rayos en debug
@@ -206,16 +228,56 @@ function DrawTraceDebugRays()
 //Dibuja variables despues del postrender
 function DrawHUD()
 {
-    local int i;
+
+    local MaterialInstanceConstant MatInst;
+   
+    //local int i;
     local Pawn   Pawn;
     local DoorOfLiesPlayerController playerControllerOwner;
-    
+  
     playerControllerOwner = DoorOfLiesPlayerController(PlayerOwner);
 
-    if(bDrawTraces) //Si bDrawTraces == true se dibujan
+
+
+        MatInst = new(self) Class'MaterialInstanceConstant';
+       
+
+        MatInst.SetParent(GameMinimap.Minimap.GetMaterial());
+        
+        MatInst.SetScalarParameterValue('TileSize',TileSize);
+        MatInst.SetTextureParameterValue('BorderTex',Texture2D'CompassContent.map_border');
+        MatInst.SetTextureParameterValue('MinimapTex',Texture2D'Mapa1.Texture.mapa1Tex');
+        GameMinimap.Minimap = MatInst;
+    
+
+
+       
+     
+
+      //  Canvas.SetPos(ajustemouse.X,ajustemouse.Y);
+      //  Canvas.DeProject(ajustemouse, playerControllerOwner.MousePosWorldLocation, playerControllerOwner.MousePosWorldNormal);
+      //  Canvas.DrawMaterialTile(GameMinimap.CompassOverlay,MapDim,MapDim,0.0,0.0,1.0,1.0);
+
+
+      //AREA DE ATAQUE
+
+//ShowDecalsForHabilites();
+//UpdateDecal();
+    if(textos.length!=0)
+    {    
+        DibujarTextos();
+    }
+
+
+    setCoordinates();
+    if(bDrawTraces ) //Si bDrawTraces == true se dibujan
     {
         // Pawn
         Pawn = PLayerOwner.Pawn;
+        
+        Canvas.SetPos( 10, 380 );
+        Canvas.DrawText("" $estadoEne);
+      
 
         Canvas.SetPos( 10, 410 );
         Canvas.DrawText( "Destino: " $ playerControllerOwner.GetDestinationPosition() );
@@ -248,20 +310,35 @@ function DrawHUD()
             Canvas.DrawText( "Target: " $ playerControllerOwner.Target $ " State: " $ playerControllerOwner.Target.Controller.GetStateName() );
         }
 
-        for(i = 0; i < playerControllerOwner.powers.length; i++ )
+      /*  for(i = 0; i < playerControllerOwner.powers.length; i++ )
         {
             Canvas.SetPos( 10, 575 + ( i * 15) );
             Canvas.DrawText( playerControllerOwner.powers[i].name 
                              $ " Manas:" $ playerControllerOwner.powers[i].active 
                              $ " Cooldown:" $ playerControllerOwner.powers[i].actual_cooldown);
         }
-
+*/
         Canvas.SetPos( 10, 645 );
         Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
     }
 
     if(!MyHudHealth.IsGamePaused) DrawMap(); //COMPROBAR DIVISION POR CERO
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function PreCalcValues()
 {
@@ -429,8 +506,178 @@ function DrawMap()
         //Draw the compass overlay
         Canvas.SetPos(MapPosition.X,MapPosition.Y);
         Canvas.DrawMaterialTile(GameMinimap.CompassOverlay,MapDim,MapDim,0.0,0.0,1.0,1.0);
+
     }
     else GameMinimap = DoorOfLiesGame(WorldInfo.Game).GameMinimap;
+}
+
+
+function ShowDecalsForHabilites()
+{
+    local vector2d ajustemouse;
+    local float translation;
+    local vector lookat,posicionpj;
+    local Vector MouseOrigin, MouseDir;
+    local vector HitLocation, HitNormal;
+    local DoorOfLiesPlayerController pc;
+   
+    pc = DoorOfLiesPlayerController(PlayerOwner);
+   ajustemouse = AjustResolutionCoordinate(GetMouseCoordinates());
+       
+    if(pc.GetStateName()=='MoveMouseClick')
+    {
+      Canvas.DeProject(ajustemouse, MouseOrigin, MouseDir);
+      if(PlayerOwner.Trace(HitLocation, HitNormal, MouseOrigin + (MouseDir * 100000), MouseOrigin, true) != none)
+      {
+       if(Reticule==none)
+       {
+           Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , HitLocation + (HitNormal * 48), Rotator(HitNormal * -1), , true);  ;
+           if(Reticule != none)
+            {
+            Reticule.Decal.SetDecalMaterial(ReticuleMaterial);
+            last_position_clicked=ajustemouse;
+            }
+       }
+       if(Reticule!=none && pc.bRightMousePressed==true)
+       {
+        
+            Reticule.SetLocation(HitLocation + (HitNormal *48));
+            Reticule.SetRotation(Rotator(HitNormal * -1));
+            last_position_clicked=ajustemouse;
+       }
+      }
+    }
+    /*if(pc.GetStateName()=='MoveMousePressedAndHold')
+    {
+      Canvas.DeProject(ajustemouse, MouseOrigin, MouseDir);
+      if(PlayerOwner.Trace(HitLocation, HitNormal, MouseOrigin + (MouseDir * 100000), MouseOrigin, true) != none)
+      {
+       if(Reticule==none)
+       {
+           Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , HitLocation + (HitNormal * 48), Rotator(HitNormal * -1), , true);  ;
+           if(Reticule != none)
+             {
+        Reticule.Decal.SetDecalMaterial(ReticuleMaterial);
+
+        }
+       }
+       if(Reticule!=none)
+       {
+           Reticule.SetLocation(HitLocation + (HitNormal *48));
+            Reticule.SetRotation(Rotator(HitNormal * -1));
+       }
+      }
+    }*/
+    if(pc.GetStateName()=='Idle')
+    {
+    if(Reticule==none)
+       {
+        
+       } 
+    if(Reticule!=none)
+       {
+        Reticule.Decal.ResetToDefaults();
+        Reticule=none;
+       }    
+    }
+    if(pc.GetStateName()=='MoveMousePressedAndHold')
+    {
+      Canvas.DeProject(ajustemouse, MouseOrigin, MouseDir);
+      if(PlayerOwner.Trace(HitLocation, HitNormal, MouseOrigin + (MouseDir * 100000), MouseOrigin, true) != none)
+      {
+       if(Reticule==none)
+       {
+           Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , ,pc.Location, Rotator(HitNormal * -1), , true);  ;
+           if(Reticule != none)
+             {
+        Reticule.Decal.SetDecalMaterial(ReticuleMaterial);
+
+        }
+       }
+       if(Reticule!=none)
+       { 
+
+
+        // COLOCAR TEXTURA QUE GIRE DESDE EL PLAYER
+            HitLocation.z=0;
+            posicionpj=pc.pawn.Location;
+            posicionpj.z=0;
+            lookat = HitLocation - posicionpj;
+
+           lookat.Z=-200;
+           
+
+           if(Abs(lookat.X)>abs(lookat.Y))
+           {
+            translation=Abs(lookat.X)/10;
+            lookat.X=lookat.X/translation;
+            lookat.Y=lookat.Y/translation;
+           }
+           if(abs(lookat.X)<abs(lookat.Y))
+           {
+            translation=abs(lookat.Y)/10;
+            lookat.Y=lookat.Y/translation;
+            lookat.X=lookat.X/translation;
+           }
+            
+
+
+           Reticule.SetLocation(pc.pawn.Location);
+           Reticule.SetRotation(Rotator(lookat *1));
+           // Reticule.SetRotation(Rotator(lookat * -1));
+       }
+      }
+    }
+}
+
+
+function setCoordinates()    // PARA PASAR LOS PUNTOS DE RATON PROYECTADOS A OTRAS CLASES
+{
+ ajustemouse_ = AjustResolutionCoordinate(GetMouseCoordinates());
+ Canvas.DeProject(ajustemouse_, MouseOrigin_, MouseDir_);
+ MouseOrigin_=MouseOrigin_;
+  MouseDir_= MouseDir_;
+}
+
+
+public function AddTexto(string t,int d,vector p)
+{
+ local Structexto new_tex;
+ new_tex.texto=t;
+ new_tex.duracion=100;
+ new_tex.location=p;
+ textos.additem(new_tex);
+}
+
+function DibujarTextos()
+{
+local int i;
+local vector screenCords;
+
+for (i = 0; i < textos.length; ++i) 
+    {
+     screenCords =Canvas.Project(textos[i].location);
+     Canvas.SetPos(screenCords.X,screenCords.Y-100 +textos[i].duracion/2);
+     Canvas.SetDrawColor(255,035,001);
+     Canvas.Font=fuente;
+     Canvas.DrawText("" $textos[i].texto );
+     textos[i].duracion=textos[i].duracion-1;
+        if(textos[i].duracion<0)
+        {
+        textos.Removeitem(textos[i]);
+        }
+    }
+}
+
+public function vector getMoOr()
+{
+    
+ return MouseOrigin_;
+
+}
+public function vector getMoDr()
+{
+ return MouseDir_;
 }
 
 exec function MapSizeUp()
@@ -457,15 +704,18 @@ exec function MapZoomOut()
 
 DefaultProperties
 {
+
     bDrawTraces = true;
     bShowScores = false;
-
+    aumento=0.1;
     MapDim=128
     BoxSize=12
     PlayerColors(0)=(R=255,G=255,B=255,A=255)
     PlayerColors(1)=(R=96,G=255,B=96,A=255)
     TileSize=0.4
     MapPosition=(X=0.000000,Y=0.000000)
-
-    
+    ReticuleMaterial=DecalMaterial'Decals.Materials.Area_Ciruclar'
+    ReticuleClickMaterial=DecalMaterial'Decals.Materials.Area_Ciruclar'
+    ReticuleAreaMaterial=DecalMaterial'Decals.Materials.Area_Ciruclar'
+    fuente=Font'DoorOfLiesHud_Texturas.Font_0'
 }

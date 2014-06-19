@@ -9,6 +9,7 @@ var GFxObject MC_Root;
 var private vector2d _mousePosition;
 var bool IsGamePaused;
 
+var MU_Minimap GameMinimap;
 event bool Start(optional bool StartPaused = false) //Constructor
 {
 	super.Start(StartPaused);
@@ -70,12 +71,12 @@ function OnMouseMove(int X, int Y)
 function PauseGameControl(bool mode)
 {
 	local PlayerController PlayerController;
-
+	
 	IsGamePaused = mode;
 
 	PlayerController = GetPC();
 	PlayerController.SetPause(IsGamePaused);
-
+    
 }
 
 function PauseGameControlPlayer()
@@ -88,6 +89,8 @@ function PauseGameControlPlayer()
 
 	PlayerController = GetPC();
 	PlayerController.SetPause(IsGamePaused);
+	
+
 }
 
 function MainMenu()
@@ -100,8 +103,11 @@ function vector2d GetMouseCoordinates()
 	return _mousePosition;
 }
 
+
 DefaultProperties
 {
 	MovieInfo = SwfMovie'DoorOfLiesHud_gabas.HealthHud'
 	bDisplayWithHudOff = false;
+ 
+
 }

@@ -33,6 +33,7 @@ var int         ScriptedRouteIndex;
 
 var() Vector TempDest;
 var bool GotToDest;
+var bool hability_finished;
 var Vector NavigationDestination;
 var Vector2D DistanceCheck;
 
@@ -52,11 +53,11 @@ struct Hability
    var float actual_cooldown;
    var float seconds_spawn_wall;
    var float default_seconds_spawn_wall;
-   var delegate <AttackHability> Attack;
-   var delegate <DefendHability> Defend;
+//   var delegate <AttackHability> Attack;
+//   var delegate <DefendHability> Defend;
 };
 
-enum Habilities
+/*enum Habilities
 {
 	Fuego,
 	Agua,
@@ -65,14 +66,14 @@ enum Habilities
 };
 
 var array <Hability> powers;
-
+*/
 /*****************************************************************/
 
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    Set_Habilities();
+    //Set_Habilities();
 }
 
 //Truncamos la rotacion
@@ -98,11 +99,16 @@ event PlayerTick( float DeltaTime )
 			if(!IsInState('MoveMousePressedAndHold')) PushState('MoveMousePressedAndHold');
 			else GotoState('MoveMousePressedAndHold', 'Begin', false, true);
 		}
+		
 	}
 
-	if(bLeftMousePressed) DeltaTimeAccumulated += DeltaTime; //Guardamos el tiempo que el boton IZQ ha estado pulsado
+	if(bLeftMousePressed) 
+	{
 
-	UpdateHabilities(DeltaTime);
+	DeltaTimeAccumulated += DeltaTime; 
+	}//Guardamos el tiempo que el boton IZQ ha estado pulsado
+
+	//UpdateHabilities(DeltaTime);
 }
 
 exec function PauseGame()
@@ -110,229 +116,51 @@ exec function PauseGame()
   	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
 }
 
-/************** HABILIDADES *************************/
-function Set_Habilities()
-{
-	local int i;
-
-	powers.length = 4;
-
-	for(i = 0; i < powers.length; i++ )
-	{
-		powers[i].activable = true;
-		powers[i].active = false;
-
-		powers[i].manas = 10;
-
-		powers[i].seconds_spawn_wall = 2;
-		powers[i].default_seconds_spawn_wall = 2;
-	}
-
-	powers[Fuego].name = 'Fuego';
-    powers[Fuego].cooldown = 5;
-    powers[Fuego].Attack = AttackFire;
-    powers[Fuego].Defend = DefenseFire;
-
-    powers[Agua].name = 'Agua';
-    powers[Agua].cooldown = 5;
-    powers[Agua].Attack = AttackWater;
-    powers[Agua].Defend = DefenseWater;
-
-
-    powers[Tierra].name = 'Tierra';
-    powers[Tierra].cooldown = 6;
-    powers[Tierra].Attack = AttackStone;
-    powers[Tierra].Defend = DefenseStone;
-
-
-    powers[Aire].name = 'Aire';
-    powers[Aire].cooldown = 3;
-    powers[Aire].Attack = AttackWind;
-    powers[Aire].Defend = DefenseWind;
-
-}
-
-function change_habilty (int Hability_to_active)
-{
-	local int i;
-	for(i = 0; i < powers.length; i++ )
-	{
-		if( i != Hability_to_active ) powers[i].active = false;
-		else 
-		{
-			if( powers[i].active == true ) powers[i].active = false;
-			else
-			{
-				if(powers[i].actual_cooldown <= 0) powers[i].active = true;
-				else
-				{
-					powers[i].active = false;
-					`log("ESTA EN COOLDOWN");
-				}
-			}
-		}
-	}
-}
 
 exec function Q_Hability ()
 {
-	change_habilty(Fuego);
-}
-
-exec function W_Hability ()
-{
-	change_habilty(Agua);
-}
-
-exec function E_Hability ()
-{
-	change_habilty(Tierra);
-}
-
-exec function R_Hability ()
-{
-	change_habilty(Aire);
-}
-
-simulated delegate AttackFire() 
-{	
-	local Fireball bola;
+	//change_habilty(Fuego);
+	local AreaAmistosa bola;
 	
 	`log("Spawn de Bola de Fuego");
 
-	bola = Spawn(class 'Fireball',,, pawn.location);
+	bola = Spawn(class 'AreaAmistosa',,,pawn.Location);
+	bola.Constructor(400,1200,true,true,0,0.5,2,DecalMaterial'Decals.Materials.Area_lanzamiento',400,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
 	bola.targetPoint = MouseHitWorldLocation;
 	bola.emitterPawn = pawn;
 }
 
-delegate AttackHability();
-delegate DefendHability();
-
-simulated delegate AttackWater() 
-{	
-	`log("Spawn de ATAQUE Agua");
-}
-
-simulated delegate AttackStone() 
-{	
-	`log("Spawn de ATAQUE Tierra");
-}
-
-simulated delegate AttackWind() 
-{	
-	`log("Spawn de ATAQUE Aire");
-}
-
-simulated delegate DefenseFire() 
-{	
-	local Firewall muro;
-	local vector viewpoint;
-
-	viewpoint.X = MouseHitWorldLocation.X - Pawn.Location.X;
-	viewpoint.Y = MouseHitWorldLocation.Y - Pawn.Location.Y;
-
-
-	Pawn.SetRotation(rotator(viewpoint));
-
-	powers[Fuego].seconds_spawn_wall -= GetTimerRate('DefenseFire');
-
-	`log("Spawn de Muro de Fuego");
-
-	muro = Spawn(class 'Firewall',,, MouseHitWorldLocation);
-	muro.emitterPawn = pawn;
+exec function W_Hability ()
+{
+	//change_habilty(Agua);
+	local AreaAmistosa water;
 	
-	if(powers[Fuego].seconds_spawn_wall > 0) SetTimer(0.2, false, 'DefenseFire');
-	else powers[Fuego].seconds_spawn_wall = powers[Fuego].default_seconds_spawn_wall;
+	`log("Spawn de Area de hielo");
+
+	water = Spawn(class 'AreaAmistosa',,,pawn.Location);
+	water.Constructor(450,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
+	water.targetPoint = MouseHitWorldLocation;
+	water.emitterPawn = pawn;
+
+
 }
 
-function StopWallSpawning() 
-{	
-	ClearAllTimers();
-}
-
-simulated delegate DefenseWater() 
-{	
-	`log("Spawn de DEFENSA Agua");
-}
-
-simulated delegate DefenseStone() 
-{	
-	`log("Spawn de DEFENSA Tierra");
-}
-
-simulated delegate DefenseWind() 
-{	
-	`log("Spawn de DEFENSA Aire");
-}
-
-exec function bool PlayAggressiveHability ()
+exec function E_Hability ()
 {
-	local int i;
-	local delegate <AttackHability> Temp;
-	local bool result;
-	result = false;
+	local AreaAmistosa water;
 	
-	for(i = 0; i < powers.length; i++ )
-	{
-		if(powers[i].active)
-		{
-			if(powers[i].actual_cooldown <= 0)
-			{
-				if(powers[i].manas > 0)
-				{
-					powers[i].manas --;
-					powers[i].actual_cooldown = powers[i].cooldown;
-					Temp = powers[i].Attack;
-					Temp();
-					powers[i].active = false;
-					result = true;
+	`log("Spawn de Teleport");
 
-					`log("Ataque " $ powers[i].name);
-				}
-				else `log("NO TENGO MANAS PARA " $ powers[i].name);
-			}
-			else `log("ESTOY EN COOLDOWN PARA " $ powers[i].name);
-		}
-	}
-
-	return result;
+	water = Spawn(class 'AreaAmistosa',,,pawn.Location);
+	water.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1);  //EFECTO TELEPORT
+	water.targetPoint = MouseHitWorldLocation;
+	water.emitterPawn = pawn;
 }
 
-exec function PlayDefensiveHability ()
+exec function R_Hability ()
 {
-	local int i;
-	local delegate <DefendHability> Temp;
-	`log("DENTRO DEFENSIVE");
-	for(i = 0; i < powers.length; i++ )
-	{
-		if(powers[i].active)
-		{
-			if(powers[i].actual_cooldown <= 0)
-			{
-				if(powers[i].manas > 0)
-				{
-					powers[i].manas --;
-					powers[i].actual_cooldown = powers[i].cooldown;
-					Temp = powers[i].Defend;
-					Temp();
-					powers[i].active = false; //desactivamos la habilidad
-
-					`log("Defensa " $ powers[i].name);
-				}
-				else `log("NO TENGO MANAS PARA " $ powers[i].name);
-			}
-			else `log("ESTOY EN COOLDOWN PARA " $ powers[i].name);
-		}
-	}
+	//change_habilty(Aire);
 }
-
-function UpdateHabilities( float DeltaTime )
-{
-	local int i;
-	for(i = 0; i < powers.length; i++ ) if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
-}
-
-/*******************************************************************/
 
 exec function ZoomCameraDown() //Scroll de la camara
 {
@@ -345,12 +173,14 @@ exec function ZoomCameraUp() //Scroll de la camara
 
 exec function SelectAction()
 {
+	
 	Target = Attackable(TraceActor);
 }
 
 //Se lanza cuando pulsamos un boton del ratón y da el destino al que dirigirse
 exec function StartFire(optional byte FireModeNum)
 {
+	
 	if(myHUD.bShowHUD)
 	{
 		ResetMove();
@@ -364,8 +194,21 @@ exec function StartFire(optional byte FireModeNum)
 		bPawnNearDestination = false;
 
 		//Initialize mouse pressed over time.
+		/*
 		bLeftMousePressed = FireModeNum == 0;
+		`log("antes"$bRightMousePressed);
 		bRightMousePressed = FireModeNum == 1;
+		`log("despues"$bRightMousePressed);*/
+		if(FireModeNum==0) {
+
+			bLeftMousePressed=true;
+			bRightMousePressed=false;
+		}
+		if(FireModeNum==1)
+		{ 
+			bRightMousePressed=true;
+			bLeftMousePressed=false;
+		}
 	}
 }
 
@@ -375,20 +218,21 @@ exec function StopFire(optional byte FireModeNum )
 	local float Distancewithtarget;
 	local Vector2D  DistanceCheckMove;
 	local Actor local_target;
-	
 	if(myHUD.bShowHUD)
 	{
 		//Reseteamos el tiempo de pulsado de los botones del ratón
-		if(bLeftMousePressed && FireModeNum == 0)
+		if(bLeftMousePressed==true && FireModeNum == 0)
 		{
+			
 			bLeftMousePressed = false;
+		
 		}
 		
 		if(bRightMousePressed && FireModeNum == 1)
 		{
 			bRightMousePressed = false;
 			
-			if( !PlayAggressiveHability () ) //Si no esta ejecutando un ataque de habilidad
+			if(!IsInState('CastingHability')) //Si no esta ejecutando un ataque de habilidad
 			{
 				local_target = Attackable(TraceActor);
 				if(local_target != none && local_target != Pawn) 
@@ -421,8 +265,9 @@ exec function StopFire(optional byte FireModeNum )
 					else
 					{
 
-						if( !IsInState('MoveMousePressedAndHold') ) PopState(); //Paramos al jugador por que se encuentra cerca del punto de destino
-						else GotoState('Idle');
+						if( !IsInState('MoveMousePressedAndHold') ) { MovePawnToDestination(FireModeNum);}//PopState();`log("AQUI ERROR");} //Paramos al jugador por que se encuentra cerca del punto de destino
+						else 
+						GotoState('Idle');
 					}
 				}
 			}
@@ -437,7 +282,7 @@ function MovePawnToDestination(optional byte FireModeNum)
 {	
 	SetDestinationPosition(MouseHitWorldLocation);
 
-	Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+	//Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
 
 	if( !IsInState('MoveMouseClick') ) PushState('MoveMouseClick');
 }
@@ -456,6 +301,7 @@ function ExecutePathFindMove()
 //Función que prevee que el jugador no se quede atascado con un obstaculo, al cabo de un tiempo el jugador se para
 function StopLingering()
 {
+
 	PopState(true);
 }
 
@@ -469,6 +315,7 @@ function PlayerMove(float DeltaTime)
 	super.PlayerMove(DeltaTime);
 
 	//Calculamos distancia hasta el punto de destino
+
 	Destination = GetDestinationPosition();
 	DistanceCheckMove.X = Destination.X - Pawn.Location.X;
 	DistanceCheckMove.Y = Destination.Y - Pawn.Location.Y;
@@ -507,6 +354,7 @@ Begin:
 /******** ESTADO Mover a un punto *************/
 state MoveMouseClick
 {
+	//local vector LastDestino;
 	event PoppedState()
 	{
 		//Si el timer de StopLingering estaba activo lo desabilitamos.
@@ -521,8 +369,13 @@ state MoveMouseClick
 
 Begin:
 	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Normal);
+
 	while(!bPawnNearDestination) //Mientras no estemos cerca del destino
 	{
+		//if(bRightMousePressed==true)
+		//{
+		//	LastDestino=GetDestinationPosition();
+		//}
 		MoveTo(GetDestinationPosition());
 	}
 
@@ -654,7 +507,7 @@ state NavMeshSeeking
 /***********************************************************************/
 
 /******** ESTADO Atacar *************/
-state Attack
+state Attack 
 {
 	local Vector    Destination;
 	local Vector2D  DistanceCheckMove;    
@@ -754,9 +607,22 @@ Begin:
 
 	GotoState('Attack');
 }
-/************************************/
 
-/******************************************************************/
+state CastingHability extends PlayerWalking
+{
+
+Begin:
+
+	ResetMove();
+	
+	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
+	if(hability_finished)
+	{
+	`log("entra");
+	hability_finished=false;
+	GotoState('idle');
+	}
+}
 
 function ResetMove()
 {
@@ -782,6 +648,7 @@ simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, in
 
 DefaultProperties
 {
+	hability_finished=false;
 	CameraClass=class'DoorOfLiesPlayerCamera'
 	InputClass = class'DoorOfLiesPlayerInput';
 	RotationSpeed = 10;
