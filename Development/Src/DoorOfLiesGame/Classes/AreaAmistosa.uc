@@ -71,6 +71,7 @@ simulated event Tick(float Deltatime)
            {
                  if(TypeOrigin==false)
                   {
+                     SetLocation(groundLocation);
                   Reticule.SetLocation(groundLocation);
                   }
                   else
@@ -230,12 +231,14 @@ function recolocarActoresColisionando() //para el spawn del bloque de hielo.
   local vector mov;
   for(i=0;i<colisionando.length;i++)
       {
+       
         mov.x=colisionando[i].Location.X-Location.X;
         mov.y=colisionando[i].Location.Y-Location.Y;
         mov.x=colisionando[i].Location.X+ mov.x;
         mov.y=colisionando[i].Location.Y+ mov.y;
         mov.z=colisionando[i].Location.Z;
         colisionando[i].SetLocation(mov);
+        
       }
 }
 

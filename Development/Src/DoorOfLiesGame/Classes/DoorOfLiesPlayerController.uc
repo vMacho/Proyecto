@@ -218,7 +218,7 @@ exec function W_Hability ()
 		`log("Spawn de Area de hielo");
 
 		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
-		area_activa.Constructor(450,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
+		area_activa.Constructor(400,400,true,false,0,1,4,DecalMaterial'Decals.Materials.Area_MURO',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
 
@@ -245,7 +245,7 @@ exec function E_Hability ()
 
 exec function R_Hability ()
 {
-	//change_habilty(Aire);
+
 }
 
 exec function ZoomCameraDown() //Scroll de la camara
