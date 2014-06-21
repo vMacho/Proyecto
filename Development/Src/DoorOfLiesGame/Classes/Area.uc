@@ -105,18 +105,6 @@ function setTim()
 
 function CreateArea(int d)
 {
-    if(TypeOrigin)
-    {
-      TypeAttack=DecalMaterial'Decals.Materials.Area_lanzamiento';
-      //anchoarea=200;
-      //largoarea=600;
-    }
-    else
-    {
-      TypeAttack=DecalMaterial'Decals.Materials.Area_Ciruclar';
-      //anchoarea=200;
-      //largoarea=200;
-    }
     inicialLocation = Location;
     Area = WorldInfo.MyDecalManager.SpawnDecal (TypeAttack, // UMaterialInstance used for this decal.
                                              inicialLocation, // Decal spawned at the hit location.
@@ -245,6 +233,11 @@ function Constructor(int ancho,int largo,bool fromi,bool Origin,int shap,float t
 
 anchoarea=ancho;
 largoarea=largo;
+if(Efect==2)
+{
+colision.SetCylinderSize(1,1);
+}
+else
 colision.SetCylinderSize(anchoarea/2,50);
 From=fromi;
 TypeOrigin=Origin;
@@ -315,7 +308,7 @@ DefaultProperties
     bCollideActors = true;
     bBlockActors = false;
 
-    speed = 300
+    speed = 500
     damage = 5
     duration = 5
 }
