@@ -51,13 +51,9 @@ struct Hability
    var name name;
    var float cooldown;
    var float actual_cooldown;
-   var float seconds_spawn_wall;
-   var float default_seconds_spawn_wall;
-//   var delegate <AttackHability> Attack;
-//   var delegate <DefendHability> Defend;
 };
 
-/*enum Habilities
+enum Habilities
 {
 	Fuego,
 	Agua,
@@ -66,14 +62,96 @@ struct Hability
 };
 
 var array <Hability> powers;
-*/
+
+var AreaAmistosa area_activa;
+
 /*****************************************************************/
+
+/************** HABILIDADES *************************/
+function Set_Habilities()
+{
+	local int i;
+
+	powers.length = 4;
+
+	for(i = 0; i < powers.length; i++ )
+	{
+		powers[i].activable = true;
+		powers[i].active = false;
+
+		powers[i].manas = 5;
+	}
+
+	powers[Fuego].name = 'Fuego';
+    powers[Fuego].cooldown = 5;
+
+    powers[Agua].name = 'Agua';
+    powers[Agua].cooldown = 5;
+
+
+    powers[Tierra].name = 'Tierra';
+    powers[Tierra].cooldown = 6;
+
+
+    powers[Aire].name = 'Aire';
+    powers[Aire].cooldown = 3;
+
+}
+
+function bool change_habilty ( int Hability_to_active )
+{
+	local int i;
+	
+	area_activa.CancelCast();
+
+	if( powers[Hability_to_active].activable )
+	{
+		if( powers[Hability_to_active].actual_cooldown <= 0 )
+		{
+			if( powers[Hability_to_active].manas > 0 )
+			{
+				for(i = 0; i < powers.length; i++ ) powers[i].active = false;
+				powers[Hability_to_active].active = true;
+			}
+			else
+			{
+				powers[Hability_to_active].active = false;
+				AddDanger("No Mana");
+			}
+		}
+		else
+		{
+			powers[Hability_to_active].active = false;
+			AddDanger("No esta listo todavia");
+		}
+	}
+	else
+	{
+		powers[Hability_to_active].active = false;
+		`log("HABILIDAD NO ACTIVA TODAVIA");
+	}
+
+	return powers[Hability_to_active].active;
+}
+
+function AddDanger(string text)
+{
+    local vector postexto;
+    postexto = location;
+    MyHud(MyHud).AddTexto(text,1,postexto);
+}
+
+function UpdateHabilities( float DeltaTime )
+{
+	local int i;
+	for(i = 0; i < powers.length; i++ ) if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
+}
 
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    //Set_Habilities();
+    Set_Habilities();
 }
 
 //Truncamos la rotacion
@@ -104,11 +182,10 @@ event PlayerTick( float DeltaTime )
 
 	if(bLeftMousePressed) 
 	{
-
-	DeltaTimeAccumulated += DeltaTime; 
+		DeltaTimeAccumulated += DeltaTime; 
 	}//Guardamos el tiempo que el boton IZQ ha estado pulsado
 
-	//UpdateHabilities(DeltaTime);
+	UpdateHabilities(DeltaTime);
 }
 
 exec function PauseGame()
@@ -118,43 +195,52 @@ exec function PauseGame()
 
 
 exec function Q_Hability ()
-{
-	//change_habilty(Fuego);
-	local AreaAmistosa bola;
-	
-	`log("Spawn de Bola de Fuego");
+{	
+	if( change_habilty(Fuego) ) //Si esta valida la habilidad
+	{
 
-	bola = Spawn(class 'AreaAmistosa',,,pawn.Location);
-	bola.Constructor(400,1200,true,true,0,0.5,2,DecalMaterial'Decals.Materials.Area_lanzamiento',400,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
-	bola.targetPoint = MouseHitWorldLocation;
-	bola.emitterPawn = pawn;
+		`log("Spawn de Bola de Fuego");
+
+		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
+		area_activa.Constructor(400,1200,true,true,0,0.5,2,DecalMaterial'Decals.Materials.Area_lanzamiento',400,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
+		area_activa.targetPoint = MouseHitWorldLocation;
+		area_activa.emitterPawn = pawn;
+
+		powers[Fuego].manas--;
+		powers[Fuego].actual_cooldown = powers[Fuego].cooldown;
+	}
 }
 
 exec function W_Hability ()
-{
-	//change_habilty(Agua);
-	local AreaAmistosa water;
-	
-	`log("Spawn de Area de hielo");
+{	
+	if( change_habilty(Agua) )
+	{
+		`log("Spawn de Area de hielo");
 
-	water = Spawn(class 'AreaAmistosa',,,pawn.Location);
-	water.Constructor(450,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
-	water.targetPoint = MouseHitWorldLocation;
-	water.emitterPawn = pawn;
+		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
+		area_activa.Constructor(450,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
+		area_activa.targetPoint = MouseHitWorldLocation;
+		area_activa.emitterPawn = pawn;
 
-
+		powers[Agua].manas--;
+		powers[Agua].actual_cooldown = powers[Agua].cooldown;
+	}
 }
 
 exec function E_Hability ()
 {
-	local AreaAmistosa water;
-	
-	`log("Spawn de Teleport");
+	if( change_habilty(Tierra) )
+	{
+		`log("Spawn de Teleport");
 
-	water = Spawn(class 'AreaAmistosa',,,pawn.Location);
-	water.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1);  //EFECTO TELEPORT
-	water.targetPoint = MouseHitWorldLocation;
-	water.emitterPawn = pawn;
+		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
+		area_activa.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1);  //EFECTO TELEPORT
+		area_activa.targetPoint = MouseHitWorldLocation;
+		area_activa.emitterPawn = pawn;
+
+		powers[Tierra].manas--;
+		powers[Tierra].actual_cooldown = powers[Tierra].cooldown;
+	}
 }
 
 exec function R_Hability ()
@@ -282,7 +368,7 @@ function MovePawnToDestination(optional byte FireModeNum)
 {	
 	SetDestinationPosition(MouseHitWorldLocation);
 
-	//Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
+	Spawn(class'PointerActor',,,MouseHitWorldLocation,,,);
 
 	if( !IsInState('MoveMouseClick') ) PushState('MoveMouseClick');
 }

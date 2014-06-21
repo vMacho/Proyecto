@@ -231,7 +231,7 @@ function DrawHUD()
 
     local MaterialInstanceConstant MatInst;
    
-    //local int i;
+    local int i;
     local Pawn   Pawn;
     local DoorOfLiesPlayerController playerControllerOwner;
   
@@ -275,50 +275,51 @@ function DrawHUD()
         // Pawn
         Pawn = PLayerOwner.Pawn;
         
-        Canvas.SetPos( 10, 380 );
+        Canvas.SetPos( 10, 180 );
         Canvas.DrawText("" $estadoEne);
       
 
-        Canvas.SetPos( 10, 410 );
+        Canvas.SetPos( 10, 210 );
         Canvas.DrawText( "Destino: " $ playerControllerOwner.GetDestinationPosition() );
 
-        Canvas.SetPos( 10, 425 );
+        Canvas.SetPos( 10, 225 );
         Canvas.DrawText( "PawnPos: " $ Pawn.Location );
-        Canvas.SetPos( 10, 440 );
+        Canvas.SetPos( 10, 240 );
         Canvas.DrawText( "PawnRot: " $ Pawn.Rotation );
 
         // Actor
-        Canvas.SetPos( 10, 470 );
+        Canvas.SetPos( 10, 270 );
         Canvas.DrawText( "Velocity: " $ Pawn.Velocity );
-        Canvas.SetPos( 10, 485 );
+        Canvas.SetPos( 10, 285 );
         Canvas.DrawText( "Acceleration: " $ Pawn.Acceleration );
 
 
-        Canvas.SetPos( 10, 500 );
+        Canvas.SetPos( 10, 300 );
         Canvas.DrawText( "Mouse X: " $ GetMouseCoordinates().X);
-        Canvas.SetPos( 10, 515 );
+        Canvas.SetPos( 10, 315 );
         Canvas.DrawText( "Mouse Y: " $ GetMouseCoordinates().Y );
 
 
         Canvas.DrawColor = MakeColor(255,183,11,255); //Cambiamos el color con el que se dibuja el mensaje
-        Canvas.SetPos( 10, 530 );
+        Canvas.SetPos( 10, 330 );
         Canvas.DrawText( "Actor selected:" @ playerControllerOwner.TraceActor.class, false, , , TextRenderInfo );
 
-        Canvas.SetPos( 10, 545 );
+        Canvas.SetPos( 10, 345 );
         if(playerControllerOwner.Target != none)
         {
             Canvas.DrawText( "Target: " $ playerControllerOwner.Target $ " State: " $ playerControllerOwner.Target.Controller.GetStateName() );
         }
 
-      /*  for(i = 0; i < playerControllerOwner.powers.length; i++ )
+        for(i = 0; i < playerControllerOwner.powers.length; i++ )
         {
-            Canvas.SetPos( 10, 575 + ( i * 15) );
+            Canvas.SetPos( 10, 375 + ( i * 15) );
             Canvas.DrawText( playerControllerOwner.powers[i].name 
-                             $ " Manas:" $ playerControllerOwner.powers[i].active 
+                             $ " " $ playerControllerOwner.powers[i].active 
+                             $ " Manas:" $ playerControllerOwner.powers[i].manas 
                              $ " Cooldown:" $ playerControllerOwner.powers[i].actual_cooldown);
         }
-*/
-        Canvas.SetPos( 10, 645 );
+
+        Canvas.SetPos( 10, 445 );
         Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
     }
 
@@ -705,7 +706,7 @@ exec function MapZoomOut()
 DefaultProperties
 {
 
-    bDrawTraces = true;
+    bDrawTraces = false;
     bShowScores = false;
     aumento=0.1;
     MapDim=128

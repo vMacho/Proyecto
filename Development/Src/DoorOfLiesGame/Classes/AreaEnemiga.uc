@@ -169,7 +169,8 @@ simulated event Tick(float Deltatime)
             DoDamage("-15",20);
             if(particlesON==false)
             {
-            ActivarParticulas();
+              ActivarParticulas();
+              Action(TypeSecondaryEffect);  // ACCIONES SECUNDARIAS.
             }
         break;
     }
@@ -193,7 +194,52 @@ simulated function Die()
   super.Die();
 }
 
+function Action(int type)
+{
 
+  switch(type)
+  {
+    case 0:
+    break;
+    case 1: //TELEPORT
+      emitterPawn.SetLocation(groundLocation); 
+    break;
+    case 2:  // MURO
+      malla.SetHidden(false);
+      malla.SetStaticMesh(StaticMesh'PowerUpMaxCalabazas.muro');
+     
+      CylinderComponent.SetActorCollision(false, false);
+      malla.SetActorCollision(true, true);
+      CollisionComponent=malla;
+      
+      while(colisionando[0]!=none)
+      {
+        recolocarActoresColisionando();
+      }
+      bBlockActors=true;
+    break;
+    case 3: //RALENTIZAR
+      Spawn( class 'Bullet_Moco_slow',,, Location + (groundNormal) );
+    break;
+    case 4: //DERRIBAR
+    break;
+  }
+}
+
+function recolocarActoresColisionando() //para el spawn del bloque de hielo.
+{
+  local int i;
+  local vector mov;
+  for(i=0;i<colisionando.length;i++)
+      {
+        mov.x=colisionando[i].Location.X-Location.X;
+        mov.y=colisionando[i].Location.Y-Location.Y;
+        mov.x=colisionando[i].Location.X+ mov.x;
+        mov.y=colisionando[i].Location.Y+ mov.y;
+        mov.z=colisionando[i].Location.Z;
+        colisionando[i].SetLocation(mov);
+      }
+}
 
 DefaultProperties
 { 

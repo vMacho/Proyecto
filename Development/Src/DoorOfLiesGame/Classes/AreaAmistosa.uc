@@ -184,6 +184,16 @@ simulated function Die()
   Destroy();
   super.Die();
 }
+
+simulated function CancelCast()
+{
+  
+  Reticule.Decal.ResetToDefaults();
+  Reticule=none;
+
+  if( actual == Seleccion ) Destroy();
+}
+
 function Action(int type)
 {
 //local PlayerController PlayerController;

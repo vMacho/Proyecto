@@ -143,11 +143,19 @@ state Attack
 
     function Shoot()
     {
+        local AreaEnemiga bola;
+
         if(target != none)
         {
             TimerAttack = 0;
 
-            Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);
+            /*Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);*/
+
+            bola = Spawn(class 'AreaEnemiga',,,target.Location);
+            bola.Constructor(300,300,false,false,1,1,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'Murosuelo.Particles.Muro_part',3);
+            bola.targetPoint = target.Location;
+            bola.emitterPawn = pawn;
+
             
             playerDistance = VSize(Pawn.Location - target.Location);
 
@@ -159,7 +167,7 @@ state Attack
 Begin:
     BabosaExplosivaPawn(Pawn).SetAnimationState(ST_Attack);
     playerpos = target.Location;
-    WorldInfo.MyDecalManager.SpawnDecal (DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak', // UMaterialInstance used for this decal.
+    /*WorldInfo.MyDecalManager.SpawnDecal (DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak', // UMaterialInstance used for this decal.
                                          playerpos, // Decal spawned at the hit location.
                                          Rotator(vect(0.0f,0.0f,-1.0f)), // Orient decal into the surface.
                                          254, 254, // Decal size in tangent/binormal directions.
@@ -168,7 +176,7 @@ Begin:
                                          FRand() * 360, // random rotation
                                          ,true ,true, //bProjectOnTerrain y bProjectOnSkeletalMeshes
                                          ,,,MocoPawn(Pawn).AttackTime + 1
-                            );
+                            );*/
 }
 /*********************************/
 
