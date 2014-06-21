@@ -43,18 +43,15 @@ function ResetMove()
 }
 function AddOneattack()
 {
-    if(cantidadAtaquesDistance==0)
+    if( cantidadAtaquesDistance == 0 )
     {
-    if(recargarataque==0)
-    {
-    cantidadAtaquesDistance=cantidadAtaquesDistance+1;
-    recargarataque=400;
-    `log("RECARGA");
-    }
-    else if(recargarataque>0)
-    {
-        recargarataque=recargarataque-1;
-    }
+        if( recargarataque == 0 )
+        {
+            cantidadAtaquesDistance ++;
+            recargarataque = 400;
+            `log("RECARGA");
+        }
+        else if( recargarataque > 0 ) recargarataque --;
     }
 }
 //PRUEBAS 
@@ -79,7 +76,23 @@ function bool FindNavMeshPath(Actor targetAct)
  *****************************************************************/
 
 /******** ESTADO Idle *************/
-auto state Idle
+auto state SpawnBoss
+{
+    event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
+    {
+        super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+
+       //GotoState('Idle');
+    }
+
+    Begin:
+
+        Boss(Pawn).SetAnimationState(ST_Spawn);
+        ResetMove();
+        target = none;    
+}
+
+state Idle
 {
     local float playerDistance;
     event SeePlayer (Pawn Seen)
@@ -230,21 +243,23 @@ state Comeback
 
     local float playerDistance;
     local int TimeOnComeBack;
-     Begin:
-     TimeOnComeBack=TimeOnComeBack+1;
-     playerDistance = VSize(Pawn.Location - LocationRespawn);
-     NavigationHandle.SetFinalDestination(LocationRespawn);
-     if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ){ MoveTo( TempDest, none ); `log("PINZAO");}
-     else
-     {
-          MoveTo(LocationRespawn, none );
-     }
-     if(playerDistance<100 || TimeOnComeBack>400)
-     {
-        LocationRespawn=pawn.Location;
-        GotoState('Idle');
-     }
-     goto 'begin';
+
+    Begin:
+     
+         TimeOnComeBack ++;
+         playerDistance = VSize(Pawn.Location - LocationRespawn);
+         NavigationHandle.SetFinalDestination(LocationRespawn);
+         
+         if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius() ) ) MoveTo( TempDest, none );
+         else MoveTo(LocationRespawn, none );
+         
+         if( playerDistance < 100 || TimeOnComeBack > 400 )
+         {
+            LocationRespawn=pawn.Location;
+            GotoState('Idle');
+         }
+
+         goto 'begin';
 }
 
 /*********************************/
@@ -291,7 +306,7 @@ state Attack
     function Shoot()
     {
         local AreaEnemiga bola;
-        Boss(Pawn).SetAnimationState(ST_Attack_distancia);
+        Boss(Pawn).SetAnimationState(ST_Attack_cerca);
           
          
       

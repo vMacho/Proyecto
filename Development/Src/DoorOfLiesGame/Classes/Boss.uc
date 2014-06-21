@@ -10,7 +10,7 @@ class Boss extends HumanoidPawn
 enum EAnimState
 {
     ST_Normal,
-    ST_Attack_distancia,
+    ST_Spawn,
     ST_Die,
     ST_Attack_cerca
 };
