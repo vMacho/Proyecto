@@ -1,3 +1,4 @@
+
 class AreaEnemiga extends Area;
 
 enum Estados
@@ -14,9 +15,10 @@ var Vector groundLocation,groundNormal;
 
 var int outrangenext;
 var vector locationShoot;
+
 simulated event PostBeginPlay()
 {
-    From=false;
+    From = false;
     super.PostBeginPlay();
     SetTimer(duration, false, 'Die');
 }
@@ -125,22 +127,22 @@ simulated event Tick(float Deltatime)
             groundNormal.y=0;
             groundNormal.z=1;     // de esta manera no se bugean las areas que spawneamos
             
-           if(Reticule==none)
+           if( Reticule == none )
            {
                Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , Location + (groundNormal* 48), Rotator(groundNormal * -1), , true);  
 
                if(Reticule != none)
-                {
-                Reticule.Decal.SetDecalMaterial(matTime);   
-                Reticule.Decal.Width=anchoarea;
-                Reticule.Decal.Height=largoarea;
-                }
+              {
+                Reticule.Decal.SetDecalMaterial( matTime );   
+                Reticule.Decal.Width  = anchoarea;
+                Reticule.Decal.Height = largoarea;
+              }
            }
            if(Reticule!=none)
            {
 
            }
-            if(hurt==true)
+            if( hurt )
             {
               //DoorOfLiesPlayerController(PlayerController).hability_finished=true;
               actual=Inflige;
@@ -166,11 +168,11 @@ simulated event Tick(float Deltatime)
             SetLocation(newLocation);
             }*/
 
-            DoDamage("-15",20);
-            if(particlesON==false)
+            DoDamage( "-15", 20 );
+            if( !particlesON )
             {
               ActivarParticulas();
-              Action(TypeSecondaryEffect);  // ACCIONES SECUNDARIAS.
+              Action( TypeSecondaryEffect );  // ACCIONES SECUNDARIAS.
             }
         break;
     }
@@ -189,13 +191,14 @@ simulated function Die()
 {
   
   Reticule.Decal.ResetToDefaults();
-  Reticule=none;
+  Reticule = none;
   Destroy();
   super.Die();
 }
 
 function Action(int type)
 {
+  local int i;
 
   switch(type)
   {
@@ -210,16 +213,18 @@ function Action(int type)
      
       CylinderComponent.SetActorCollision(false, false);
       malla.SetActorCollision(true, true);
-      CollisionComponent=malla;
-      
-      while(colisionando[0]!=none)
-      {
-        recolocarActoresColisionando();
-      }
-      bBlockActors=true;
+      CollisionComponent = malla;
+
+      while( colisionando.length > 0 ) recolocarActoresColisionando();
+
+      bBlockActors = true;
     break;
     case 3: //RALENTIZAR
-      Spawn( class 'Bullet_Moco_slow',,, Location + (groundNormal) );
+      //Spawn( class 'Bullet_Moco_slow',,, Location + (groundNormal) );
+      for( i = 0; i < colisionando.length; i++ )
+      {
+        if(Attackable(colisionando[i]) != none  && Attackable(colisionando[i]).GroundSpeed == Attackable(colisionando[i]).default_humanoid_GroundSpeed) Attackable(colisionando[i]).SlowGroud(100, 2);
+      }
     break;
     case 4: //DERRIBAR
     break;
@@ -230,22 +235,23 @@ function recolocarActoresColisionando() //para el spawn del bloque de hielo.
 {
   local int i;
   local vector mov;
-  for(i=0;i<colisionando.length;i++)
-      {
-        mov.x=colisionando[i].Location.X-Location.X;
-        mov.y=colisionando[i].Location.Y-Location.Y;
-        mov.x=colisionando[i].Location.X+ mov.x;
-        mov.y=colisionando[i].Location.Y+ mov.y;
-        mov.z=colisionando[i].Location.Z;
-        colisionando[i].SetLocation(mov);
-      }
+ 
+  for(i = 0; i < colisionando.length; i++ )
+  {
+    mov.x = colisionando[i].Location.X - Location.X;
+    mov.y = colisionando[i].Location.Y - Location.Y;
+    mov.x = colisionando[i].Location.X + mov.x;
+    mov.y = colisionando[i].Location.Y + mov.y;
+    mov.z = colisionando[i].Location.Z;
+
+    colisionando[i].SetLocation( mov );
+  }
 }
 
 DefaultProperties
 { 
- 
-  outrangenext=0;
-  distanciaCast=300;
-  ReticuleClickMaterial=DecalMaterial'Decals.Materials.Area_Select'
-  actual=Cargando
+  outrangenext  = 0;
+  distanciaCast = 300;
+  ReticuleClickMaterial = DecalMaterial'Decals.Materials.Area_Select'
+  actual        = Cargando
 }

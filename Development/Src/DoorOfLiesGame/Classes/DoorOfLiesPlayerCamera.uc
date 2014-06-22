@@ -100,16 +100,11 @@ function UpdateViewTarget(out TViewTarget OutVT, float DeltaTime)
       }
    }
 
-   if( !bDoNotApplyModifiers )
-   {
-      // Apply camera modifiers at the end (view shakes for example)
-      ApplyCameraModifiers(DeltaTime, OutVT.POV);
-   }
-   //`log( WorldInfo.TimeSeconds  @ GetFuncName() @ OutVT.Target @ OutVT.POV.Location @ OutVT.POV.Rotation @ OutVT.POV.FOV );
+   if( !bDoNotApplyModifiers ) ApplyCameraModifiers(DeltaTime, OutVT.POV); // Apply camera modifiers at the end (view shakes for example)
 }
 
 DefaultProperties
 {
-   DefaultFOV=90.f;
-   FreeCamDistance = 640;
+   DefaultFOV = 90.f;
+   FreeCamDistance = 768;
 }

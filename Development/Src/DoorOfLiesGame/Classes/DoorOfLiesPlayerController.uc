@@ -64,6 +64,7 @@ enum Habilities
 var array <Hability> powers;
 
 var AreaAmistosa area_activa;
+var int Hability_active;
 
 /*****************************************************************/
 
@@ -74,9 +75,8 @@ function Set_Habilities()
 
 	powers.length = 4;
 
-	for(i = 0; i < powers.length; i++ )
+	for( i = 0; i < powers.length; i++ )
 	{
-		powers[i].activable = true;
 		powers[i].active = false;
 
 		powers[i].manas = 5;
@@ -96,13 +96,20 @@ function Set_Habilities()
     powers[Aire].name = 'Aire';
     powers[Aire].cooldown = 3;
 
+    powers[Fuego].activable = DoorOfLiesPawn(Pawn).hability_fire;
+    powers[Agua].activable = DoorOfLiesPawn(Pawn).hability_water;
+    powers[Tierra].activable = DoorOfLiesPawn(Pawn).hability_earth;
+    powers[Aire].activable = DoorOfLiesPawn(Pawn).hability_wind;
 }
 
 function bool change_habilty ( int Hability_to_active )
 {
 	local int i;
 	
-	area_activa.CancelCast();
+	//Hability_active = -1;
+	//if( powers[Hability_to_active].active ) return false; //para no activar la misma habilidad varias veces
+
+	if( area_activa != none ) area_activa.CancelCast();
 
 	if( powers[Hability_to_active].activable )
 	{
@@ -112,6 +119,7 @@ function bool change_habilty ( int Hability_to_active )
 			{
 				for(i = 0; i < powers.length; i++ ) powers[i].active = false;
 				powers[Hability_to_active].active = true;
+				Hability_active = Hability_to_active;
 			}
 			else
 			{
@@ -137,7 +145,7 @@ function bool change_habilty ( int Hability_to_active )
 function AddDanger(string text)
 {
     local vector postexto;
-    postexto = location;
+    postexto = pawn.location;
     MyHud(MyHud).AddTexto(text,1,postexto);
 }
 
@@ -151,7 +159,7 @@ simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    Set_Habilities();
+    //Set_Habilities();
 }
 
 //Truncamos la rotacion
@@ -198,16 +206,11 @@ exec function Q_Hability ()
 {	
 	if( change_habilty(Fuego) ) //Si esta valida la habilidad
 	{
-
-		`log("Spawn de Bola de Fuego");
-
 		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
 		area_activa.Constructor(400,1200,true,true,0,0.5,2,DecalMaterial'Decals.Materials.Area_lanzamiento',400,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
-
-		powers[Fuego].manas--;
-		powers[Fuego].actual_cooldown = powers[Fuego].cooldown;
+		area_activa.habilidad_player = Fuego;
 	}
 }
 
@@ -215,15 +218,11 @@ exec function W_Hability ()
 {	
 	if( change_habilty(Agua) )
 	{
-		`log("Spawn de Area de hielo");
-
 		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
-		area_activa.Constructor(400,400,true,false,0,1,4,DecalMaterial'Decals.Materials.Area_MURO',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
+		area_activa.Constructor(100,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
-
-		powers[Agua].manas--;
-		powers[Agua].actual_cooldown = powers[Agua].cooldown;
+		area_activa.habilidad_player = Agua;
 	}
 }
 
@@ -231,21 +230,17 @@ exec function E_Hability ()
 {
 	if( change_habilty(Tierra) )
 	{
-		`log("Spawn de Teleport");
-
 		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
 		area_activa.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1);  //EFECTO TELEPORT
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
-
-		powers[Tierra].manas--;
-		powers[Tierra].actual_cooldown = powers[Tierra].cooldown;
+		area_activa.habilidad_player = Tierra;
 	}
 }
 
 exec function R_Hability ()
 {
-
+	//change_habilty(Aire);
 }
 
 exec function ZoomCameraDown() //Scroll de la camara
@@ -330,9 +325,7 @@ exec function StopFire(optional byte FireModeNum )
 					Distancewithtarget = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
 
 					if(Distancewithtarget >= 220) //Hacer dependible del target
-					{
-						`log("DENTRO MOVIMIENTO DE ATAQUE");
-						
+					{						
 						if(FastTrace(MouseHitWorldLocation, PawnEyeLocation,, true)) GotoState('MoveToAttack');	 //Movimiento simple
 						//else ExecutePathFindMove(); //Ejecutamos el pathfinding
 					}
@@ -702,11 +695,15 @@ Begin:
 	ResetMove();
 	
 	DoorOfLiesPawn(Pawn).SetAnimationState(ST_Attack);
-	if(hability_finished)
+	
+	if( hability_finished )
 	{
-	`log("entra");
-	hability_finished=false;
-	GotoState('idle');
+		//`log("entra");
+		hability_finished = false;
+		powers[Hability_active].manas--;
+        powers[Hability_active].actual_cooldown = powers[Hability_active].cooldown;
+
+		GotoState('idle');
 	}
 }
 
@@ -734,8 +731,8 @@ simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, in
 
 DefaultProperties
 {
-	hability_finished=false;
-	CameraClass=class'DoorOfLiesPlayerCamera'
-	InputClass = class'DoorOfLiesPlayerInput';
-	RotationSpeed = 10;
+	hability_finished	= false;
+	CameraClass			= class'DoorOfLiesPlayerCamera'
+	InputClass 			= class'DoorOfLiesPlayerInput';
+	RotationSpeed 		= 10;
 }

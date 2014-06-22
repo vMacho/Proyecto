@@ -2,20 +2,14 @@ class Comestible_Controller extends AIController;
  
 var Actor target;
 var Vector TempDest;
-var float TimerAttack;
-var int RangoPerseguir;
-var int RangoAtacar;
+var float speedFlee;
+var int RangoHuir;
 var vector LocationRespawn;
-var float distanceToComeback;
-var int cantidadAtaquesDistance;
-var int recargarataque;
-//PRUEBAS
-
 
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
-    LocationRespawn=location;
+    LocationRespawn = location;
     InitNavigationHandle();
 }
 
@@ -29,8 +23,6 @@ event Tick(float DeltaTime)
 {
     super.Tick(DeltaTime);
     
-    AddOneattack();
-    
     //DumpStateStack();
 }
 
@@ -41,20 +33,6 @@ function ResetMove()
     Acceleration = vect(0,0,0);
     MoveTimer = -1.0;
 }
-function AddOneattack()
-{
-    if( cantidadAtaquesDistance == 0 )
-    {
-        if( recargarataque == 0 )
-        {
-            cantidadAtaquesDistance = cantidadAtaquesDistance+1;
-            recargarataque=400;
-            `log("RECARGA");
-        }
-        else if( recargarataque > 0 ) recargarataque = recargarataque - 1;
-    }
-}
-//PRUEBAS 
 
 
 function bool FindNavMeshPath(Actor targetAct)
@@ -79,6 +57,7 @@ function bool FindNavMeshPath(Actor targetAct)
 auto state Idle
 {
     local float playerDistance;
+    
     event SeePlayer (Pawn Seen)
     {
         super.SeePlayer(Seen);
@@ -86,24 +65,22 @@ auto state Idle
 
         playerDistance = VSize(Pawn.Location - target.Location);
         
-        if(playerDistance < RangoPerseguir)
-        { 
-            //GotoState('Follow');
-        } 
+        if(playerDistance < RangoHuir) GotoState('Flee');
     }
 
-Begin:
+    Begin:
 
-    Comestible(Pawn).SetAnimationState(ST_Normal);
-    ResetMove();
-    target = none;
-    GotoState('merodeando');
+        Comestible(Pawn).SetAnimationState(ST_Normal);
+        ResetMove();
+        target = none;
+        GotoState('merodeando');
     
 }
+/*********************************/
 
 state merodeando
 {
-    local float playerDistance,rand,timeNextMove;
+    local float rand, timeNextMove, playerDistance;
     local vector randomMove;
 
     event SeePlayer (Pawn Seen)
@@ -113,10 +90,7 @@ state merodeando
 
         playerDistance = VSize(Pawn.Location - target.Location);
         
-        if(playerDistance < RangoPerseguir)
-        { 
-            //GotoState('Follow');
-        } 
+        if(playerDistance < RangoHuir) GotoState('Flee');
     }
 
 
@@ -129,17 +103,17 @@ state merodeando
        randomMove.Y=randomMove.Y+rand;
        
        rand = 1;   //De esta manera solo se ejecuta la primera vez y luego solo cuando llega a su destino
-       timeNextMove = 200;
+       timeNextMove = 100;
     }
     
     Begin:
 
         if( rand == 0 ) GetRandonDestiny();
 
-        if(timeNextMove>0) timeNextMove = timeNextMove - 1;
+        if( timeNextMove > 0 ) timeNextMove -= 1;
         
         Comestible(Pawn).SetAnimationState(ST_Normal);
-        playerDistance = VSize(Pawn.Location - randomMove);
+        
         NavigationHandle.SetFinalDestination(randomMove);
         
         if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ){ MoveTo( TempDest, none );}
@@ -149,30 +123,35 @@ state merodeando
         
         goto 'Begin';
 }
-
 /*********************************/
 
-state Comeback
+state Flee
 {
-
+    local vector selfPlayer;
     local float playerDistance;
-    local int TimeOnComeBack;
-    
+
+    event PlayerOutOfReach()
+    {
+        GotoState('Idle');
+    }
+
+    event Tick(float deltaTime)
+    {
+        selfPlayer =  Pawn.Location - target.Location;
+        selfPlayer.z = Pawn.Location.z;
+        playerDistance = Abs( VSize( selfPlayer ) );
+        
+       if ( playerDistance > RangoHuir ) PlayerOutOfReach();
+       else
+       {
+          Pawn.Velocity = Normal( selfPlayer ) * speedFlee;
+          Pawn.SetRotation( rotator( selfPlayer ) );
+          Pawn.Move( Pawn.Velocity * deltaTime );
+       }
+    }
+
     Begin:
-        TimeOnComeBack=TimeOnComeBack+1;
-        playerDistance = VSize(Pawn.Location - LocationRespawn);
-        NavigationHandle.SetFinalDestination( LocationRespawn );
-
-        if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius() ) ) MoveTo( TempDest, none );
-        else MoveTo(LocationRespawn, none );
-
-        if( playerDistance < 100 || TimeOnComeBack > 400 )
-        {
-            LocationRespawn=pawn.Location;
-            GotoState('Idle');
-        }
-
-        goto 'begin';
+        Comestible(Pawn).SetAnimationState(ST_Flee);
 }
 
 /*********************************/
@@ -180,25 +159,35 @@ state Comeback
 /******** ESTADO Explode *************/
 state Explode
 {
+    local DoorOfLiesPlayerController PlayerController;
+
     event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
     {
         super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
 
-        WorldInfo.MyDecalManager.SpawnDecal (DecalMaterial'HU_Deck.Decals.M_Decal_GooLeak', // UMaterialInstance used for this decal.
-                                         Pawn.Location, // Decal spawned at the hit location.
-                                         Rotator(vect(0.0f,0.0f,-1.0f)), // Orient decal into the surface.
-                                         254, 254, // Decal size in tangent/binormal directions.
-                                         512, // Decal size in normal direction.
-                                         false, // If TRUE, use "NoClip" codepath.
-                                         FRand() * 360, // random rotation
-                                         ,true ,true //bProjectOnTerrain y bProjectOnSkeletalMeshes
-                            );
+        PlayerController = DoorOfLiesPlayerController(GetALocalPlayerController());
+
+        switch (Comestible(Pawn).type)
+        {
+            case Com_Fuego:
+                PlayerController.powers[0].manas++;
+            break;
+            case Com_Agua:
+                PlayerController.powers[1].manas++;
+            break;
+            case Com_Tierra:
+                PlayerController.powers[2].manas++;
+            break;
+            case Com_Viento:
+                PlayerController.powers[3].manas++;
+            break;           
+        }
 
         Pawn.Destroy();
     }
 Begin:
-    MoveTo(Pawn.Location, Pawn);
-    Comestible(Pawn).SetAnimationState(ST_Die);    
+    MoveTo( Pawn.Location, Pawn );
+    Comestible(Pawn).SetAnimationState( ST_Die );    
 }
 /*********************************/
 
@@ -207,9 +196,8 @@ Begin:
 
 DefaultProperties
 {
-    cantidadAtaquesDistance=0;
-    RangoAtacar=0;
-    distanceToComeback=1000;
-    RangoPerseguir=800;
-    TimerAttack = 0;
+    RangoHuir = 1024;
+    speedFlee = 250;
+
+    //RotationSpeed = 50;
 }

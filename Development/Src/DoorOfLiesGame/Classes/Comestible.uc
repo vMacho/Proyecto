@@ -18,32 +18,45 @@ enum TipoComestible
 enum EAnimState
 {
     ST_Normal,
-    ST_Die
+    ST_Die,
+    ST_Flee
 };
 
 var PointLightComponent headlight;
 var (Comestible) TipoComestible type;
+var (Comestible) Material Material_Fuego;
+var (Comestible) Material Material_Agua;
+var (Comestible) Material Material_Tierra;
+var (Comestible) Material Material_Viento;
 
 simulated event PostBeginPlay()
 {
     local color head_Color;
+    local Material new_mat;
+
     super.PostBeginPlay();
     
     switch (type)
     {
         case Com_Fuego:
-            head_Color = MakeColor( 255, 0, 0, 255 );
-        break;
-        case Com_Tierra:
-            head_Color = MakeColor( 255, 125, 0, 255 );
+            head_Color = MakeColor( 205, 162, 162, 255 );
+            new_mat = Material_Fuego;
         break;
         case Com_Agua:
-            head_Color = MakeColor( 0, 0, 255, 255 );
+            head_Color = MakeColor( 127, 205, 205, 255 );
+            new_mat = Material_Agua;
+        break;
+        case Com_Tierra:
+            head_Color = MakeColor( 205, 205, 153, 255 );
+            new_mat = Material_Tierra;
         break;
         case Com_Viento:
-            head_Color = MakeColor( 255, 255, 255, 255 );
+            head_Color = MakeColor( 205, 205, 205, 255 );
+            new_mat = Material_Viento;
         break;           
     }
+
+    Mesh.SetMaterial(0, new_mat);
 
     headlight.SetLightProperties( 1.0, head_Color );
 }
@@ -51,6 +64,13 @@ simulated event PostBeginPlay()
 function SetAnimationState(EAnimState eState)
 {
     if(AnimNodeBlendList != none) AnimNodeBlendList.SetActiveChild(eState, 0.1f);
+}
+
+simulated event Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal)
+{ 
+    super.Bump(Other, OtherComp, HitNormal);
+
+    if(DoorOfliesPawn(Other) != none) controller.GotoState('Explode');
 }
 
 DefaultProperties
@@ -89,9 +109,14 @@ DefaultProperties
     bJumpCapable = false
     bCanJump     = false
  
-    GroundSpeed = 50.0 //Para hacerlo mas rapido que el player
+    GroundSpeed = 300.0 //Para hacerlo mas rapido que el player
     DrawScale   = 0.5
     ControllerClass = class'Comestible_Controller'
 
     AttackRange = 0
+
+    Material_Fuego = Material'Comestible.Material.Mat_ComestibleFuego';
+    Material_Tierra = Material'Comestible.Material.Mat_ComestibleTierra';
+    Material_Agua = Material'Comestible.Material.Mat_ComestibleHielo';
+    Material_Viento = Material'Comestible.Material.Mat_ComestibleViento';
 }

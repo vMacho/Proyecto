@@ -3,11 +3,17 @@
 Define Modelo - Animaciones - Afecta Luz o no
  */
 
-class DoorOfLiesPawn extends HumanoidPawn;
+class DoorOfLiesPawn extends HumanoidPawn
+        config(PlayerDoF);
 
 var (Player) SpotLightComponent flashlight;
 var (Player) int strength;
 var ParticleSystemComponent ParticlesFollowUs;
+
+var config bool hability_fire;
+var config bool hability_water;
+var config bool hability_earth;
+var config bool hability_wind;
 
 enum EAnimState
 {
@@ -15,6 +21,11 @@ enum EAnimState
     ST_Attack,
     ST_Die
 };
+
+function SavePlayer()
+{
+    SaveConfig();
+}
 
 function SetAnimationState(EAnimState eState)
 {

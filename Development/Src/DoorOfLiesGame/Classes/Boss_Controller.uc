@@ -307,8 +307,6 @@ state Attack
     {
         local AreaEnemiga bola;
         Boss(Pawn).SetAnimationState(ST_Attack_cerca);
-          
-         
       
         bola = Spawn(class 'AreaEnemiga',,,target.Location);
         bola.Constructor(300,300,false,false,1,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);

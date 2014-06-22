@@ -8,13 +8,14 @@ var globalconfig int MaxCalabazasPlayer;
 function InitGame( string Options, out string ErrorMessage )
 {
 	local MU_Minimap ThisMinimap;
+
    	Super.InitGame(Options,ErrorMessage);
 
 	foreach AllActors(class'MU_Minimap',ThisMinimap)
 	{
 		GameMinimap = ThisMinimap;
 		break;
-	}
+	}    
 }
 
 DefaultProperties

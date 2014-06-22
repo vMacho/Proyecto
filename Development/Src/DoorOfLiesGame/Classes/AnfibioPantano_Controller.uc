@@ -28,11 +28,10 @@ event Possess(Pawn inPawn, bool bVehicleTransition)
 event Tick(float DeltaTime)
 {
     local PlayerController PlayerController;
-    //local float distanciadeCome;
+    
     super.Tick(DeltaTime);
-    //distanciadeCome = VSize(Pawn.Location - LocationRespawn);
-    //`log(""$distanciadeCome);
-     PlayerController = GetALocalPlayerController();
+    
+    PlayerController = GetALocalPlayerController();
     myhud(PlayerController.myHUD).estadoEne=GetStateName();
     AddOneattack();
     
@@ -48,18 +47,15 @@ function ResetMove()
 }
 function AddOneattack()
 {
-    if(cantidadAtaquesDistance==0)
+    if( cantidadAtaquesDistance == 0 )
     {
-    if(recargarataque==0)
-    {
-    cantidadAtaquesDistance=cantidadAtaquesDistance+1;
-    recargarataque=400;
-    `log("RECARGA");
-    }
-    else if(recargarataque>0)
-    {
-        recargarataque=recargarataque-1;
-    }
+        if( recargarataque == 0 )
+        {
+            cantidadAtaquesDistance ++;
+            recargarataque = 400;
+            //`log("RECARGA");
+        }
+        else if( recargarataque > 0 ) recargarataque --;
     }
 }
 //PRUEBAS 
@@ -129,37 +125,31 @@ state merodeando
 
     function GetRandonDestiny()
     {
-       randomMove=LocationRespawn;
-       rand = RandRange(-300,300);
-       randomMove.X=randomMove.X+rand;
-       rand = RandRange(-300,300);
-       randomMove.Y=randomMove.Y+rand;
+       randomMove   = LocationRespawn;
+       rand         = RandRange(-300,300);
+       randomMove.X = randomMove.X+rand;
+       rand         = RandRange(-300,300);
+       randomMove.Y = randomMove.Y + rand;
        
-       rand=1;   //De esta manera solo se ejecuta la primera vez y luego solo cuando llega a su destino
-       timeNextMove=200;
+       rand = 1;   //De esta manera solo se ejecuta la primera vez y luego solo cuando llega a su destino
+       timeNextMove = 200;
     }
+
     Begin:
-    if(rand==0)
-    {
-        GetRandonDestiny();
-    }
-    if(timeNextMove>0)
-    {
-    timeNextMove=timeNextMove-1;
-    }
-    AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Normal);
-    playerDistance = VSize(Pawn.Location - randomMove);
-    NavigationHandle.SetFinalDestination(randomMove);
-     if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ){ MoveTo( TempDest, none );}
-     else
-     {
-          MoveTo(randomMove, none );
-     }
-     if(timeNextMove==0)
-     {
-         GetRandonDestiny();
-     }
-     goto 'Begin';
+        if( rand == 0 ) GetRandonDestiny();
+
+        if( timeNextMove > 0 ) timeNextMove -= 1;
+
+        AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Normal);
+        playerDistance = VSize(Pawn.Location - randomMove);
+        NavigationHandle.SetFinalDestination(randomMove);
+
+        if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius() ) ) MoveTo( TempDest, none );
+        else MoveTo(randomMove, none );
+        
+        if( timeNextMove == 0 ) GetRandonDestiny();
+        
+        goto 'Begin';
 }
 
 /*********************************/
@@ -171,85 +161,57 @@ state Follow
 
    // ignores SeePlayer;
     Begin:
-
-    AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Normal);
-    
-    playerDistance = VSize(Pawn.Location - target.Location);
-    DistancefromRespawn  = VSize(Pawn.Location - LocationRespawn);
-
-    if(DistancefromRespawn>distanceToComeback)
-    {
-        GotoState('Comeback');
-
-    }   
-
-    if(playerDistance > RangoAtacar || cantidadAtaquesDistance<1)   // Si la distancia es mayor que el rango de ataque
-    {
-        if( NavigationHandle.ActorReachable( target) )    //Si podemos llegar a el
-        { 
-
-            MoveToward( target, target, 20 );
-             GotoState('Attack');
-        }
-        else if( FindNavMeshPath(target) )
-        {
-            NavigationHandle.SetFinalDestination(target.Location);
-
-            if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) )
-            {
-             MoveTo( TempDest, target ); //Nos movemos hasta el primer nodo del Path
-
-            }
-            else
-            {
-             MoveToward( target, target, 20 );
-
-            }
-        }
-        else
-        {
-
-            MoveToward( target, target, 20 );
-        }
+        AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Normal);
         
-        if(playerdistance<100)  //GO TO ATTACk para ataqe basico
+        playerDistance       = VSize(Pawn.Location - target.Location);
+        DistancefromRespawn  = VSize(Pawn.Location - LocationRespawn);
+
+        if( DistancefromRespawn > distanceToComeback ) GotoState('Comeback');
+
+        if( playerDistance > RangoAtacar || cantidadAtaquesDistance < 1 )   // Si la distancia es mayor que el rango de ataque
         {
-             GotoState('Attack');
+            if( NavigationHandle.ActorReachable( target) )    //Si podemos llegar a el
+            { 
+                MoveToward( target, target, 20 );
+                GotoState('Attack');
+            }
+            else if( FindNavMeshPath(target) )
+            {
+                NavigationHandle.SetFinalDestination(target.Location);
+
+                if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ) MoveTo( TempDest, target ); //Nos movemos hasta el primer nodo del Path
+                else MoveToward( target, target, 20 );
+            }
+            else MoveToward( target, target, 20 );
+                    
+            if( playerdistance < 100 ) GotoState('Attack'); //GO TO ATTACk para ataqe basico
         }
+        else GotoState('Attack');    
 
-    }
-    else
-    {
-        GotoState('Attack');
-    }
-
-    
-
-    goto 'Begin';
+        goto 'Begin';
     
 }
 
 
 state Comeback
 {
-
     local float playerDistance;
     local int TimeOnComeBack;
-     Begin:
-     TimeOnComeBack=TimeOnComeBack+1;
-     playerDistance = VSize(Pawn.Location - LocationRespawn);
-     NavigationHandle.SetFinalDestination(LocationRespawn);
-     if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius()) ){ MoveTo( TempDest, none ); `log("PINZAO");}
-     else
-     {
-          MoveTo(LocationRespawn, none );
-     }
-     if(playerDistance<100 || TimeOnComeBack>400)
-     {
-        LocationRespawn=pawn.Location;
-        GotoState('Idle');
-     }
-     goto 'begin';
+    Begin:
+        TimeOnComeBack ++;
+        playerDistance = VSize(Pawn.Location - LocationRespawn);
+        NavigationHandle.SetFinalDestination(LocationRespawn);
+
+        if( NavigationHandle.GetNextMoveLocation( TempDest, Pawn.GetCollisionRadius() ) ) MoveTo( TempDest, none );
+        else MoveTo(LocationRespawn, none );
+
+        if( playerDistance < 100 || TimeOnComeBack > 400 )
+        {
+            LocationRespawn = pawn.Location;
+            GotoState('Idle');
+        }
+
+        goto 'begin';
 }
 
 /*********************************/
@@ -274,7 +236,7 @@ state Explode
         Pawn.Destroy();
     }
 Begin:
-    MoveTo(Pawn.Location, Pawn);
+    MoveTo( Pawn.Location, Pawn );
     AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Die);    
 }
 /*********************************/
@@ -296,10 +258,8 @@ state Attack
     function Shoot()
     {
         local AreaEnemiga bola;
+        
         AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Attack_distancia);
-          
-         
-      
         bola = Spawn(class 'AreaEnemiga',,,target.Location);
         bola.Constructor(300,300,false,false,1,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
         bola.targetPoint = target.Location;
@@ -308,8 +268,8 @@ state Attack
 
     function Hit()
     {
-        
-       local AreaEnemiga bola;
+        local AreaEnemiga bola;
+
         AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Attack_cerca);
         bola = Spawn(class 'AreaEnemiga',,,target.Location);
         bola.Constructor(200,200,false,false,0,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
@@ -325,36 +285,24 @@ Begin:
 
     if( playerDistance < RangoAtacar) 
     {
-        if(cantidadAtaquesDistance>0 )
+        if(cantidadAtaquesDistance > 0 )
         {
-        Shoot();
-        cantidadAtaquesDistance=cantidadAtaquesDistance-1;
+            Shoot();
+            cantidadAtaquesDistance--;
         }
-        else if(playerDistance<120)
-        {
-            Hit();
-        }
-        else
-        {
-            GotoState('Follow');
-        }
+        else if( playerDistance < 120 ) Hit();
+        else GotoState('Follow');
     }
-    else 
-    {
-        GotoState('Follow');
-    }
-        
+    else GotoState('Follow');        
 }
-
-
 
 /*********************************/
 
 DefaultProperties
 {
-    cantidadAtaquesDistance=2;
-    RangoAtacar=600;
-    distanceToComeback=1000;
-    RangoPerseguir=800;
-    TimerAttack = 0;
+    cantidadAtaquesDistance = 2;
+    RangoAtacar             = 600;
+    distanceToComeback      = 1000;
+    RangoPerseguir          = 800;
+    TimerAttack             = 0;
 }

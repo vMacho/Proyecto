@@ -47,6 +47,9 @@ simulated event PostBeginPlay() //Al empezar
 
     GameMinimap = DoorOfLiesGame(WorldInfo.Game).GameMinimap;
 
+    
+    DoorOfLiesPlayerController(PlayerOwner).Set_Habilities();
+
 }
 
 //Activa o desactiva ver los rayos en debug
@@ -152,13 +155,9 @@ event PostRender()
 
         // let iphone draw any always present overlays
 
-        if (bShowMobileHud)
-        {
-            DrawInputZoneOverlays();
-        }
+        if ( bShowMobileHud ) DrawInputZoneOverlays();
 
         RenderMobileMenu();
-
 
 
         IsoPlayerController = DoorOfLiesPlayerController(PlayerOwner); // Cast de la clase playerController para obtener el jugador
@@ -237,40 +236,29 @@ function DrawHUD()
   
     playerControllerOwner = DoorOfLiesPlayerController(PlayerOwner);
 
+    MatInst = new(self) Class'MaterialInstanceConstant';   
 
-
-        MatInst = new(self) Class'MaterialInstanceConstant';
-       
-
-        MatInst.SetParent(GameMinimap.Minimap.GetMaterial());
-        
-        MatInst.SetScalarParameterValue('TileSize',TileSize);
-        MatInst.SetTextureParameterValue('BorderTex',Texture2D'CompassContent.map_border');
-        MatInst.SetTextureParameterValue('MinimapTex',Texture2D'Mapa1.Texture.mapa1Tex');
-        GameMinimap.Minimap = MatInst;
+    MatInst.SetParent(GameMinimap.Minimap.GetMaterial());
     
+    MatInst.SetScalarParameterValue('TileSize',TileSize);
+    MatInst.SetTextureParameterValue('BorderTex',Texture2D'CompassContent.map_border');
+    MatInst.SetTextureParameterValue('MinimapTex',Texture2D'Mapa1.Texture.mapa1Tex');
+    GameMinimap.Minimap = MatInst;
+
+    //Canvas.SetPos(ajustemouse.X,ajustemouse.Y);
+    //Canvas.DeProject(ajustemouse, playerControllerOwner.MousePosWorldLocation, playerControllerOwner.MousePosWorldNormal);
+    //Canvas.DrawMaterialTile(GameMinimap.CompassOverlay,MapDim,MapDim,0.0,0.0,1.0,1.0);
 
 
-       
-     
+    //AREA DE ATAQUE
 
-      //  Canvas.SetPos(ajustemouse.X,ajustemouse.Y);
-      //  Canvas.DeProject(ajustemouse, playerControllerOwner.MousePosWorldLocation, playerControllerOwner.MousePosWorldNormal);
-      //  Canvas.DrawMaterialTile(GameMinimap.CompassOverlay,MapDim,MapDim,0.0,0.0,1.0,1.0);
-
-
-      //AREA DE ATAQUE
-
-//ShowDecalsForHabilites();
-//UpdateDecal();
-    if(textos.length!=0)
-    {    
-        DibujarTextos();
-    }
+    //ShowDecalsForHabilites();
+    //UpdateDecal();
+    if( textos.length != 0 ) DibujarTextos();
 
 
     setCoordinates();
-    if(bDrawTraces ) //Si bDrawTraces == true se dibujan
+    if( bDrawTraces ) //Si bDrawTraces == true se dibujan
     {
         // Pawn
         Pawn = PLayerOwner.Pawn;
@@ -302,7 +290,7 @@ function DrawHUD()
 
         Canvas.DrawColor = MakeColor(255,183,11,255); //Cambiamos el color con el que se dibuja el mensaje
         Canvas.SetPos( 10, 330 );
-        Canvas.DrawText( "Actor selected:" @ playerControllerOwner.TraceActor.class, false, , , TextRenderInfo );
+        if( playerControllerOwner.TraceActor != none ) Canvas.DrawText( "Actor selected:" @ playerControllerOwner.TraceActor.class, false, , , TextRenderInfo );
 
         Canvas.SetPos( 10, 345 );
         if(playerControllerOwner.Target != none)
@@ -313,43 +301,33 @@ function DrawHUD()
         for(i = 0; i < playerControllerOwner.powers.length; i++ )
         {
             Canvas.SetPos( 10, 375 + ( i * 15) );
-            Canvas.DrawText( playerControllerOwner.powers[i].name 
+            
+            if( playerControllerOwner.powers[i].activable )
+            {
+                Canvas.DrawText( playerControllerOwner.powers[i].name 
                              $ " " $ playerControllerOwner.powers[i].active 
                              $ " Manas:" $ playerControllerOwner.powers[i].manas 
                              $ " Cooldown:" $ playerControllerOwner.powers[i].actual_cooldown);
+            }
+            else Canvas.DrawText( playerControllerOwner.powers[i].name $ " Habilidad no activada" );
         }
 
         Canvas.SetPos( 10, 445 );
         Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
     }
 
-    if(!MyHudHealth.IsGamePaused) DrawMap(); //COMPROBAR DIVISION POR CERO
+    if( !MyHudHealth.IsGamePaused ) DrawMap(); //COMPROBAR DIVISION POR CERO
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function PreCalcValues()
 {
     super.PreCalcValues();
 
-    if(MyHudHealth != none)
+    if( MyHudHealth != none )
     {
-        MyHudHealth.SetViewport(0,0,SizeX, SizeY);
-        MyHudHealth.SetViewScaleMode(SM_NoScale);
-        MyHudHealth.SetAlignment(Align_TopLeft);
+        MyHudHealth.SetViewport( 0, 0, SizeX, SizeY );
+        MyHudHealth.SetViewScaleMode( SM_NoScale );
+        MyHudHealth.SetAlignment( Align_TopLeft );
     }
 }
 
@@ -364,8 +342,7 @@ function float GetPlayerHeading()
     PlayerHeading = GetHeadingAngle(v);
     PlayerHeading = UnwindHeading(PlayerHeading);
 
-    while (PlayerHeading < 0)
-        PlayerHeading += PI * 2.0f;
+    while (PlayerHeading < 0) PlayerHeading += PI * 2.0f;
     
     return PlayerHeading;
 }
@@ -429,14 +406,10 @@ function DrawMap()
         //Calculate upper left UV coordinate
         StartPos.X = FClamp(RotPlayerPos.X + (0.5 - (TileSize / 2.0)),0.0,1.0 - TileSize);
         StartPos.Y = FClamp(RotPlayerPos.Y + (0.5 - (TileSize / 2.0)),0.0,1.0 - TileSize);
-        //StartPos.X = FClamp(DisplayPlayerPos.X + (0.5 - (TileSize / 2.0)),TileSize/-2,1.0 - TileSize/2);
-        //StartPos.Y = FClamp(DisplayPlayerPos.Y + (0.5 - (TileSize / 2.0)),TileSize/-2,1.0 - TileSize/2);
 
         //Calculate texture panning for alpha
         MapOffset.R =  FClamp(-1.0 * RotPlayerPos.X,-0.5 + (TileSize / 2.0),0.5 - (TileSize / 2.0));
         MapOffset.G =  FClamp(-1.0 * RotPlayerPos.Y,-0.5 + (TileSize / 2.0),0.5 - (TileSize / 2.0));
-        //MapOffset.R =  FClamp(-1.0 * DisplayPlayerPos.X,-0.5,0.5);
-        //MapOffset.G =  FClamp(-1.0 * DisplayPlayerPos.Y,-0.5,0.5);
 
 
         //Cambiamos los valores al mapa, para ello creamos en tiempo real copias del material para que no de error
@@ -523,30 +496,31 @@ function ShowDecalsForHabilites()
     local DoorOfLiesPlayerController pc;
    
     pc = DoorOfLiesPlayerController(PlayerOwner);
-   ajustemouse = AjustResolutionCoordinate(GetMouseCoordinates());
+    ajustemouse = AjustResolutionCoordinate(GetMouseCoordinates());
        
     if(pc.GetStateName()=='MoveMouseClick')
     {
-      Canvas.DeProject(ajustemouse, MouseOrigin, MouseDir);
-      if(PlayerOwner.Trace(HitLocation, HitNormal, MouseOrigin + (MouseDir * 100000), MouseOrigin, true) != none)
-      {
-       if(Reticule==none)
-       {
-           Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , HitLocation + (HitNormal * 48), Rotator(HitNormal * -1), , true);  ;
-           if(Reticule != none)
+        Canvas.DeProject(ajustemouse, MouseOrigin, MouseDir);
+        if(PlayerOwner.Trace(HitLocation, HitNormal, MouseOrigin + (MouseDir * 100000), MouseOrigin, true) != none)
+        {
+            if(Reticule==none)
             {
-            Reticule.Decal.SetDecalMaterial(ReticuleMaterial);
-            last_position_clicked=ajustemouse;
+                Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , HitLocation + (HitNormal * 48), Rotator(HitNormal * -1), , true);  ;
+                
+                if(Reticule != none)
+                {
+                    Reticule.Decal.SetDecalMaterial( ReticuleMaterial );
+                    last_position_clicked = ajustemouse;
+                }
             }
-       }
-       if(Reticule!=none && pc.bRightMousePressed==true)
-       {
-        
-            Reticule.SetLocation(HitLocation + (HitNormal *48));
-            Reticule.SetRotation(Rotator(HitNormal * -1));
-            last_position_clicked=ajustemouse;
-       }
-      }
+            
+            if( Reticule != none && pc.bRightMousePressed == true )
+            {
+                Reticule.SetLocation( HitLocation + ( HitNormal * 48 ) );
+                Reticule.SetRotation( Rotator( HitNormal * -1 ) );
+                last_position_clicked = ajustemouse;
+            }
+        }
     }
     /*if(pc.GetStateName()=='MoveMousePressedAndHold')
     {
@@ -634,10 +608,10 @@ function ShowDecalsForHabilites()
 
 function setCoordinates()    // PARA PASAR LOS PUNTOS DE RATON PROYECTADOS A OTRAS CLASES
 {
- ajustemouse_ = AjustResolutionCoordinate(GetMouseCoordinates());
- Canvas.DeProject(ajustemouse_, MouseOrigin_, MouseDir_);
- MouseOrigin_=MouseOrigin_;
-  MouseDir_= MouseDir_;
+    ajustemouse_ = AjustResolutionCoordinate(GetMouseCoordinates());
+    Canvas.DeProject(ajustemouse_, MouseOrigin_, MouseDir_);
+    MouseOrigin_=MouseOrigin_;
+    MouseDir_= MouseDir_;
 }
 
 
@@ -652,44 +626,41 @@ public function AddTexto(string t,int d,vector p)
 
 function DibujarTextos()
 {
-local int i;
-local vector screenCords;
+    local int i;
+    local vector screenCords;
 
-for (i = 0; i < textos.length; ++i) 
+    for (i = 0; i < textos.length; ++i) 
     {
-     screenCords =Canvas.Project(textos[i].location);
-     Canvas.SetPos(screenCords.X,screenCords.Y-100 +textos[i].duracion/2);
-     Canvas.SetDrawColor(255,035,001);
-     Canvas.Font=fuente;
-     Canvas.DrawText("" $textos[i].texto );
-     textos[i].duracion=textos[i].duracion-1;
-        if(textos[i].duracion<0)
-        {
-        textos.Removeitem(textos[i]);
-        }
+        screenCords = Canvas.Project(textos[i].location);
+        Canvas.SetPos(screenCords.X,screenCords.Y-100 +textos[i].duracion/2);
+        Canvas.SetDrawColor(255,035,001);
+        Canvas.Font = fuente;
+        Canvas.DrawText("" $textos[i].texto );
+        textos[i].duracion=textos[i].duracion-1;
+        
+        if( textos[i].duracion < 0 ) textos.Removeitem( textos[i] );
     }
 }
 
 public function vector getMoOr()
 {
-    
- return MouseOrigin_;
-
+    return MouseOrigin_;
 }
+
 public function vector getMoDr()
 {
- return MouseDir_;
+    return MouseDir_;
 }
 
 exec function MapSizeUp()
 {
-    MapDim *= 2;
+    MapDim  *= 2;
     BoxSize *= 2;
 }
 
 exec function MapSizeDown()
 {
-    MapDim /= 2;
+    MapDim  /= 2;
     BoxSize /= 2;
 }
 
@@ -706,17 +677,19 @@ exec function MapZoomOut()
 DefaultProperties
 {
 
-    bDrawTraces = false;
+    bDrawTraces = true;
     bShowScores = false;
-    aumento=0.1;
-    MapDim=128
-    BoxSize=12
-    PlayerColors(0)=(R=255,G=255,B=255,A=255)
-    PlayerColors(1)=(R=96,G=255,B=96,A=255)
-    TileSize=0.4
-    MapPosition=(X=0.000000,Y=0.000000)
-    ReticuleMaterial=DecalMaterial'Decals.Materials.Area_Ciruclar'
-    ReticuleClickMaterial=DecalMaterial'Decals.Materials.Area_Ciruclar'
-    ReticuleAreaMaterial=DecalMaterial'Decals.Materials.Area_Ciruclar'
-    fuente=Font'DoorOfLiesHud_Texturas.Font_0'
+    aumento     = 0.1;
+    
+    MapDim      = 128
+    BoxSize     = 12
+    PlayerColors(0) = (R=255,G=255,B=255,A=255)
+    PlayerColors(1) = (R=96,G=255,B=96,A=255)
+    TileSize    = 0.4
+    MapPosition = (X=0.000000,Y=0.000000)
+
+    ReticuleMaterial        = DecalMaterial'Decals.Materials.Area_Ciruclar'
+    ReticuleClickMaterial   = DecalMaterial'Decals.Materials.Area_Ciruclar'
+    ReticuleAreaMaterial    = DecalMaterial'Decals.Materials.Area_Ciruclar'
+    fuente                  = Font'DoorOfLiesHud_Texturas.Font_0'
 }
