@@ -39,6 +39,8 @@ var Vector2D DistanceCheck;
 
 var Attackable Target;
 
+var AudioComponent walk_sound, eat_sound;
+
 /*****************************************************************/
 
 var (DoorOfLies) float RotationSpeed;
@@ -66,6 +68,8 @@ var array <Hability> powers;
 var AreaAmistosa area_activa;
 var int Hability_active;
 
+
+var bool use_button;
 /*****************************************************************/
 
 /************** HABILIDADES *************************/
@@ -155,11 +159,14 @@ function UpdateHabilities( float DeltaTime )
 	for(i = 0; i < powers.length; i++ ) if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
 }
 
+exec function Use_action(bool mode)
+{
+	use_button = mode;
+}
+
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
-
-    //Set_Habilities();
 }
 
 //Truncamos la rotacion
@@ -686,7 +693,9 @@ Begin:
 
 	GotoState('Attack');
 }
+/****************************************************/
 
+/******** ESTADO CastingHability*************/
 state CastingHability extends PlayerWalking
 {
 
@@ -706,7 +715,44 @@ Begin:
 		GotoState('idle');
 	}
 }
+/****************************************************/
 
+/******** ESTADO Eating*************/
+state Eating
+{
+	function StartFire(optional byte FireModeNum)
+	{
+		bRightMousePressed = false;
+	}
+
+	function StopFire(optional byte FireModeNum)
+	{
+		bRightMousePressed = false;
+	}
+
+	event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
+    {
+        super.OnAnimEnd(SeqNode, PlayerTime, ExcessTime);
+        
+        GotoState('idle');
+    }
+
+    event PlayerTick( float DeltaTime )
+	{
+		UpdateHabilities(DeltaTime);
+	}
+
+	function PlayerMove(float DeltaTime){ }
+
+	Begin:
+		bRightMousePressed = false;
+		ResetMove();
+		MoveTo(Pawn.Location, Pawn);
+        DoorOfLiesPawn(Pawn).SetAnimationState(ST_Eating);
+}
+/***********************************************************************/
+
+/*******************************************************************************************/
 function ResetMove()
 {
 	ClearAllTimers();
@@ -731,6 +777,12 @@ simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, in
 
 DefaultProperties
 {
+	Begin Object Class=AudioComponent Name=Music01Comp
+        //SoundCue=A_Music_GoDown.MusicMix.A_Music_GoDownMixCue                
+    End Object
+    walk_sound = Music01Comp 
+
+
 	hability_finished	= false;
 	CameraClass			= class'DoorOfLiesPlayerCamera'
 	InputClass 			= class'DoorOfLiesPlayerInput';

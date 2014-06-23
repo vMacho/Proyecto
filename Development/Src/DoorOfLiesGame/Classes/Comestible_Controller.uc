@@ -137,9 +137,9 @@ state Flee
 
     event Tick(float deltaTime)
     {
-        selfPlayer =  Pawn.Location - target.Location;
-        selfPlayer.z = Pawn.Location.z;
-        playerDistance = Abs( VSize( selfPlayer ) );
+        selfPlayer      = Pawn.Location - target.Location;
+        selfPlayer.z    = Pawn.Location.z;
+        playerDistance  = Abs( VSize( selfPlayer ) );
         
        if ( playerDistance > RangoHuir ) PlayerOutOfReach();
        else
@@ -192,12 +192,10 @@ Begin:
 /*********************************/
 
 
-/*********************************/
+/********************************************************************/
 
 DefaultProperties
 {
     RangoHuir = 1024;
     speedFlee = 250;
-
-    //RotationSpeed = 50;
 }

@@ -19,13 +19,6 @@ enum EAnimState
 };
 
 
-simulated event PostBeginPlay()
-{
-    super.PostBeginPlay();
-
-   //color_foco = MakeColor( 100, 100, 205, 255 ); 
-}
-
 function SetAnimationState(EAnimState eState)
 {
     if(AnimNodeBlendList != none)
@@ -82,10 +75,10 @@ DefaultProperties
     Components.Remove(Sprite)
 
     Begin Object Class=SkeletalMeshComponent Name=InitialSkeletalMesh
-        SkeletalMesh        = SkeletalMesh'PlantaLuz.SkeletalMesh.PlantaLuz_Rig'
+        SkeletalMesh        = SkeletalMesh'PlantaLuz.SkeletalMesh.PlantLuz_Rig'
         AnimTreeTemplate    = AnimTree'PlantaLuz.animaciones.PlantaLuz_AnimTree'
         AnimSets(0)         = AnimSet'PlantaLuz.animaciones.AnimSet_PlantaLuz'
-        Translation = (Z=-1800)
+        Translation = (Z=-2500)
 
         HiddenGame      = FALSE
         HiddenEditor    = FALSE
@@ -96,7 +89,7 @@ DefaultProperties
     CollisionType=COLLIDE_BlockAll
     Begin Object Name=CollisionCylinder //Colisiones modificadas del modelo
         CollisionRadius = 100
-        CollisionHeight = 200
+        CollisionHeight = 100
     End Object
     CylinderComponent=CollisionCylinder
  

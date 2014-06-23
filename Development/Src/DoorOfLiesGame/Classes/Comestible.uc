@@ -70,7 +70,11 @@ simulated event Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal
 { 
     super.Bump(Other, OtherComp, HitNormal);
 
-    if(DoorOfliesPawn(Other) != none) controller.GotoState('Explode');
+    if(DoorOfliesPawn(Other) != none)
+    {
+        DoorOfliesPawn(Other).controller.GotoState('Eating');
+        controller.GotoState('Explode');
+    }
 }
 
 DefaultProperties

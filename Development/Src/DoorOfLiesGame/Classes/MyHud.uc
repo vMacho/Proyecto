@@ -314,6 +314,9 @@ function DrawHUD()
 
         Canvas.SetPos( 10, 445 );
         Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
+
+        Canvas.SetPos( 10, 460 );
+        Canvas.DrawText( "Use Button -> " $ playerControllerOwner.use_button );
     }
 
     if( !MyHudHealth.IsGamePaused ) DrawMap(); //COMPROBAR DIVISION POR CERO

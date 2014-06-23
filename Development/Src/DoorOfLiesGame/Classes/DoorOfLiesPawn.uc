@@ -19,12 +19,18 @@ enum EAnimState
 {
     ST_Normal,
     ST_Attack,
-    ST_Die
+    ST_Die,
+    ST_Eating
 };
 
 function SavePlayer()
 {
     SaveConfig();
+}
+
+exec function ResetData()
+{
+    
 }
 
 function SetAnimationState(EAnimState eState)

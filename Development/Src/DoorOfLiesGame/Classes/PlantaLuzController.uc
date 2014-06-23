@@ -73,8 +73,7 @@ state Born
 state Idle
 {
     Begin:
-        //PlantaLuz(Pawn).SetAnimationState(ST_Idle);
-        `log("DENTRO 3");
+        PlantaLuz(Pawn).SetAnimationState(ST_Idle);
 }
 /*********************************/
 
