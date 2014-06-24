@@ -149,10 +149,8 @@ state Attack
         {
             TimerAttack = 0;
 
-            /*Spawn(MocoPawn(Pawn).bulletClass,,, playerpos);*/
-
             bola = Spawn(class 'AreaEnemiga',,,target.Location);
-            bola.Constructor(300,300,false,false,1,1,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'Murosuelo.Particles.Muro_part',3);
+            bola.Constructor(300,300,false,false,1,1,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'Murosuelo.Particles.Muro_part',3, 0);
             bola.targetPoint = target.Location;
             bola.emitterPawn = pawn;
 

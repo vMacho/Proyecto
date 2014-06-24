@@ -313,10 +313,25 @@ function DrawHUD()
         }
 
         Canvas.SetPos( 10, 445 );
-        Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
+        Canvas.DrawText( "Player Inmune -> " $ Attackable(playerControllerOwner.Pawn).inmune );
 
         Canvas.SetPos( 10, 460 );
+        Canvas.DrawText( "Player State -> " $ playerControllerOwner.GetStateName() );
+
+        Canvas.SetPos( 10, 475 );
         Canvas.DrawText( "Use Button -> " $ playerControllerOwner.use_button );
+
+
+        for(i = 0; i < playerControllerOwner.misiones.length; i++ )
+        {
+            Canvas.SetPos( 1000, 275 + ( i * 25) );
+            
+            if( !playerControllerOwner.misiones[i].doIt )
+            {
+                Canvas.DrawText( playerControllerOwner.misiones[i]._title );
+            }
+        }
+
     }
 
     if( !MyHudHealth.IsGamePaused ) DrawMap(); //COMPROBAR DIVISION POR CERO

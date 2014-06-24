@@ -15,6 +15,9 @@ var config bool hability_water;
 var config bool hability_earth;
 var config bool hability_wind;
 
+var AudioComponent walk_sound, eat_sound;
+var ParticleSystemComponent sistema_particulas_inmune;
+
 enum EAnimState
 {
     ST_Normal,
@@ -74,14 +77,46 @@ function AddDefaultInventory()
 
 auto state Idle
 {
-
     Begin:
         Controller.GotoState('Idle');
+}
+
+State Dying
+{
+}
+
+simulated function PlayDying(class<DamageType> DamageType, vector HitLoc)
+{
+}
+
+function SetDamage(float damage)
+{
+    DoorOfLiesPlayerController(controller).SetDamage(damage);
+}
+
+function bool Died(Controller Killer, class<DamageType> DamageType, vector HitLocation)
+{
+     Controller.GotoState('Dead');
+     return false;
 }
 
 defaultproperties
 {
     Components.Remove(Sprite)
+
+    Begin Object Class=AudioComponent Name=Music01Comp
+        //SoundCue=A_Music_GoDown.MusicMix.A_Music_GoDownMixCue                
+    End Object
+    Components.add(Music01Comp);
+    walk_sound = Music01Comp 
+
+    Begin Object Class=ParticleSystemComponent Name=particle_system
+        Template = ParticleSystem'KismetGame_Assets.Effects.P_EarBuzz_01';
+        Translation = (Z=30)
+        bAutoActivate = false;
+    End Object
+    Components.Add(particle_system)
+    sistema_particulas_inmune = particle_system;
 
     Begin Object Class=DynamicLightEnvironmentComponent Name=MyLightEnvironment //Como afecta la luz al modelo
         ModShadowFadeoutTime=0.25
@@ -146,7 +181,7 @@ defaultproperties
 
     bCanPickupInventory = true
 
-    strength = 5;
+    strength = 25;
     
     //GroundSpeed = 200
 }

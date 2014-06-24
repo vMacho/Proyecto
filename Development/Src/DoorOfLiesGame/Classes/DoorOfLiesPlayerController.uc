@@ -4,7 +4,7 @@
 
 class DoorOfLiesPlayerController extends PlayerController;
 
-/*****************************************************************/
+/********************* MOVIMIENTO PATHFINDING **********************************/
 var Vector2D    PlayerMouse;                //Hold calculated mouse position (this is calculated in HUD)
 
 var Vector      MouseHitWorldLocation;      //Hold where the ray casted from the mouse in 3d coordinate intersect with world geometry. We will
@@ -33,17 +33,20 @@ var int         ScriptedRouteIndex;
 
 var() Vector TempDest;
 var bool GotToDest;
-var bool hability_finished;
 var Vector NavigationDestination;
 var Vector2D DistanceCheck;
+/*****************************************************************/
 
 var Attackable Target;
 
-var AudioComponent walk_sound, eat_sound;
+var bool use_button;
+var float RotationSpeed;
 
-/*****************************************************************/
+var array<Quest> misiones;
 
-var (DoorOfLies) float RotationSpeed;
+/************** HABILIDADES *************************/
+
+var bool hability_finished;
 
 struct Hability
 {
@@ -67,12 +70,8 @@ var array <Hability> powers;
 
 var AreaAmistosa area_activa;
 var int Hability_active;
+var float time_inmune;
 
-
-var bool use_button;
-/*****************************************************************/
-
-/************** HABILIDADES *************************/
 function Set_Habilities()
 {
 	local int i;
@@ -110,9 +109,6 @@ function bool change_habilty ( int Hability_to_active )
 {
 	local int i;
 	
-	//Hability_active = -1;
-	//if( powers[Hability_to_active].active ) return false; //para no activar la misma habilidad varias veces
-
 	if( area_activa != none ) area_activa.CancelCast();
 
 	if( powers[Hability_to_active].activable )
@@ -146,40 +142,124 @@ function bool change_habilty ( int Hability_to_active )
 	return powers[Hability_to_active].active;
 }
 
-function AddDanger(string text)
-{
-    local vector postexto;
-    postexto = pawn.location;
-    MyHud(MyHud).AddTexto(text,1,postexto);
-}
-
 function UpdateHabilities( float DeltaTime )
 {
 	local int i;
 	for(i = 0; i < powers.length; i++ ) if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
+
+	if( DoorOfLiesPawn(Pawn).inmune )
+	{
+		if( time_inmune <= 0 )
+		{
+			DoorOfLiesPawn(Pawn).inmune = false;
+			time_inmune = default.time_inmune;
+			DoorOfLiesPawn(Pawn).sistema_particulas_inmune.DeactivateSystem();
+		}
+		else time_inmune -= DeltaTime;
+	}
 }
+
+exec function Q_Hability ()
+{	
+	if( change_habilty(Fuego) ) //Si esta valida la habilidad
+	{
+		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
+		area_activa.Constructor(400,1200,true,true,0,0.5,2,DecalMaterial'Decals.Materials.Area_lanzamiento',400,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0, 25);
+		area_activa.targetPoint = MouseHitWorldLocation;
+		area_activa.emitterPawn = pawn;
+		area_activa.habilidad_player = Fuego;
+	}
+}
+
+exec function W_Hability ()
+{	
+	if( change_habilty(Agua) )
+	{
+		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
+		area_activa.Constructor(100,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2, 0);  //EFECTO RALENTIZA.
+		area_activa.targetPoint = MouseHitWorldLocation;
+		area_activa.emitterPawn = pawn;
+		area_activa.habilidad_player = Agua;
+	}
+}
+
+exec function E_Hability ()
+{
+	if( change_habilty(Aire) )
+	{
+		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
+		area_activa.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1, 0);  //EFECTO TELEPORT
+		area_activa.targetPoint = MouseHitWorldLocation;
+		area_activa.emitterPawn = pawn;
+		area_activa.habilidad_player = Tierra;
+	}
+}
+
+exec function R_Hability ()
+{
+	if( change_habilty(Tierra) )
+	{
+		DoorOfLiesPawn(Pawn).inmune = true;
+		DoorOfLiesPawn(Pawn).sistema_particulas_inmune.ActivateSystem();
+
+		powers[Tierra].manas--;
+        powers[Tierra].actual_cooldown = powers[Tierra].cooldown;
+	}
+}
+
+/*****************************************************************/
 
 exec function Use_action(bool mode)
 {
 	use_button = mode;
 }
 
-simulated event PostBeginPlay()
+function CreateQuest( int id, string title, string description )
 {
-    super.PostBeginPlay();
+	local Quest mision;
+
+	mision = new class 'Quest';
+
+	mision.Quest( id, title, description );
+
+	misiones.AddItem( mision );
 }
 
-//Truncamos la rotacion
-function UpdateRotation( float DeltaTime ) {}
+function bool FinishQuest( int id )
+{
+	local int i;
+	local bool exito;
 
-//Truncamos la rotacion
-function ProcessViewRotation( float DeltaTime, out Rotator out_ViewRotation, Rotator DeltaRot ) {}
+	exito = false;
 
+	for( i = 0; i < misiones.Length; i++ )
+	{
+		if( misiones[i]._id == id )
+		{
+			misiones[i].doIt = true;
+			exito = true;	
+		}
+	}
 
-//Cada frame
-event PlayerTick( float DeltaTime )
+	return exito;
+}
+
+function AddDanger(string text)
+{
+    local vector postexto;
+    postexto = pawn.location;
+    MyHud(MyHud).AddTexto( text, 1, postexto );
+}
+
+function UpdateRotation( float DeltaTime ) {} //Truncamos la rotacion
+
+function ProcessViewRotation( float DeltaTime, out Rotator out_ViewRotation, Rotator DeltaRot ) {} //Truncamos la rotacion
+
+event PlayerTick( float DeltaTime ) //Cada frame
 {
 	super.PlayerTick(DeltaTime);
+
+	if( Pawn.Health <= 0 ) GotoState('Dead');
 
 	if(bRightMousePressed)
 	{
@@ -206,48 +286,6 @@ event PlayerTick( float DeltaTime )
 exec function PauseGame()
 {
   	MyHud(myHUD).MyHudHealth.PauseGameControlPlayer();
-}
-
-
-exec function Q_Hability ()
-{	
-	if( change_habilty(Fuego) ) //Si esta valida la habilidad
-	{
-		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
-		area_activa.Constructor(400,1200,true,true,0,0.5,2,DecalMaterial'Decals.Materials.Area_lanzamiento',400,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
-		area_activa.targetPoint = MouseHitWorldLocation;
-		area_activa.emitterPawn = pawn;
-		area_activa.habilidad_player = Fuego;
-	}
-}
-
-exec function W_Hability ()
-{	
-	if( change_habilty(Agua) )
-	{
-		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
-		area_activa.Constructor(100,100,true,false,0,0.5,2,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'Murosuelo.Particles.Muro_part',2);  //EFECTO RALENTIZA.
-		area_activa.targetPoint = MouseHitWorldLocation;
-		area_activa.emitterPawn = pawn;
-		area_activa.habilidad_player = Agua;
-	}
-}
-
-exec function E_Hability ()
-{
-	if( change_habilty(Tierra) )
-	{
-		area_activa = Spawn(class 'AreaAmistosa',,,pawn.Location);
-		area_activa.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1);  //EFECTO TELEPORT
-		area_activa.targetPoint = MouseHitWorldLocation;
-		area_activa.emitterPawn = pawn;
-		area_activa.habilidad_player = Tierra;
-	}
-}
-
-exec function R_Hability ()
-{
-	//change_habilty(Aire);
 }
 
 exec function ZoomCameraDown() //Scroll de la camara
@@ -407,11 +445,7 @@ function PlayerMove(float DeltaTime)
 	DistanceCheckMove.Y = Destination.Y - Pawn.Location.Y;
 	DistanceRemaining = Sqrt((DistanceCheckMove.X*DistanceCheckMove.X) + (DistanceCheckMove.Y*DistanceCheckMove.Y));
 	
-	//`Log("DistanceCheckMove is"@DistanceCheckMove.X@DistanceCheckMove.Y);
-	//`Log("Distance remaining"@DistanceRemaining);
-	
 	bPawnNearDestination = DistanceRemaining < 15.0f;
-	//`Log("Has pawn come near destination ?"@bPawnNearDestination);
 
 	PawnXYLocation.X = Pawn.Location.X;
 	PawnXYLocation.Y = Pawn.Location.Y;
@@ -458,10 +492,6 @@ Begin:
 
 	while(!bPawnNearDestination) //Mientras no estemos cerca del destino
 	{
-		//if(bRightMousePressed==true)
-		//{
-		//	LastDestino=GetDestinationPosition();
-		//}
 		MoveTo(GetDestinationPosition());
 	}
 
@@ -696,7 +726,7 @@ Begin:
 /****************************************************/
 
 /******** ESTADO CastingHability*************/
-state CastingHability extends PlayerWalking
+state CastingHability //extends PlayerWalking
 {
 
 Begin:
@@ -707,7 +737,6 @@ Begin:
 	
 	if( hability_finished )
 	{
-		//`log("entra");
 		hability_finished = false;
 		powers[Hability_active].manas--;
         powers[Hability_active].actual_cooldown = powers[Hability_active].cooldown;
@@ -719,6 +748,39 @@ Begin:
 
 /******** ESTADO Eating*************/
 state Eating
+{
+	function StartFire(optional byte FireModeNum)
+	{
+		bRightMousePressed = false;
+	}
+
+	function StopFire(optional byte FireModeNum)
+	{
+		bRightMousePressed = false;
+	}
+
+	event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
+    {
+        super.OnAnimEnd(SeqNode, PlayerTime, ExcessTime);
+        
+        GotoState('idle');
+    }
+
+    event PlayerTick( float DeltaTime )
+	{
+		UpdateHabilities(DeltaTime);
+	}
+
+	function PlayerMove(float DeltaTime){ }
+
+	Begin:
+		bRightMousePressed = false;
+		ResetMove();
+		MoveTo(Pawn.Location, Pawn);
+        DoorOfLiesPawn(Pawn).SetAnimationState(ST_Eating);
+}
+
+State Dead
 {
 	function StartFire(optional byte FireModeNum)
 	{
@@ -764,27 +826,26 @@ function ResetMove()
 
 function SetDamage(float damage)
 {
-	Pawn.Health -= damage;
-	MyHud(myHUD).MyHudHealth.SetDamage(damage);
+	if( !DoorOfLiesPawn(Pawn).inmune )
+	{
+		//Pawn.Health -= damage;
+		MyHud(myHUD).MyHudHealth.SetDamage(damage);
+	}
 }
 
 simulated function NotifyTakeHit(Controller InstigatedBy, vector HitLocation, int Damage, class<DamageType> damageType, vector Momentum)
 {
 	Super.NotifyTakeHit(InstigatedBy,HitLocation,Damage,damageType,Momentum);
 
-	MyHud(myHUD).MyHudHealth.SetDamage(Damage);
+	 if( !DoorOfLiesPawn(Pawn).inmune ) MyHud(myHUD).MyHudHealth.SetDamage(Damage);
 }
 
 DefaultProperties
 {
-	Begin Object Class=AudioComponent Name=Music01Comp
-        //SoundCue=A_Music_GoDown.MusicMix.A_Music_GoDownMixCue                
-    End Object
-    walk_sound = Music01Comp 
-
-
 	hability_finished	= false;
 	CameraClass			= class'DoorOfLiesPlayerCamera'
 	InputClass 			= class'DoorOfLiesPlayerInput';
 	RotationSpeed 		= 10;
+
+	time_inmune = 3;
 }

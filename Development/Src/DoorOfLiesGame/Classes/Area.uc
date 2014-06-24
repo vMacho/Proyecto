@@ -1,6 +1,6 @@
 class Area extends Pawn; 
 var (Hability) float speed;
-var (Hability) float damage;
+var (Hability) int damage;
 var (Hability) float duration;
 var float durationcarga;
 var vector dimensiones;
@@ -29,7 +29,6 @@ var int TypeSecondaryEffect;
 simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
-    //CreateArea(0); 
     colisionando.length = 0;
 }
 
@@ -45,22 +44,26 @@ event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vecto
   
   super.Touch(Other, OtherComp, HitLocation, HitNormal);
 
-  if( Attackable(Other) != none )
+  if( emitterPawn != none )
   {
-    existe = false;
-
-    for( i = 0; i < colisionando.length; i++)
+    if( Attackable(Other) != none && emitterPawn != Pawn(Other))
     {
-        if(colisionando[i] == other) existe = true; //Si ya esta en el array no le volvemos a meter
-    }
+      existe = false;
 
-    if( !existe ) colisionando.AddItem(other);
+      for( i = 0; i < colisionando.length; i++ ) if( colisionando[i] == other ) existe = true; //Si ya esta en el array no le volvemos a meter
+      
+      if( !existe ) colisionando.AddItem(other);
+    }
   }
 }
+
 event untouch(actor other)
 {
-  colisionando.RemoveItem(other);
-  //`log("REMOVE"$other);
+  if( Attackable(Other) != none && emitterPawn != Pawn(Other))
+  {
+    colisionando.RemoveItem(other);
+    `log("SACO "$ other.Name);
+  }
 }
 
 function Die()
@@ -78,18 +81,9 @@ function setTim()
 
 function CreateArea(int d)
 {
-    if(TypeOrigin)
-    {
-      TypeAttack=DecalMaterial'Decals.Materials.Area_lanzamiento';
-      //anchoarea=200;
-      //largoarea=600;
-    }
-    else
-    {
-      TypeAttack=DecalMaterial'Decals.Materials.Area_Ciruclar';
-      //anchoarea=200;
-      //largoarea=200;
-    }
+    if(TypeOrigin) TypeAttack = DecalMaterial'Decals.Materials.Area_lanzamiento';
+    else TypeAttack = DecalMaterial'Decals.Materials.Area_Ciruclar';
+
     inicialLocation = Location;
     Area = WorldInfo.MyDecalManager.SpawnDecal (TypeAttack, // UMaterialInstance used for this decal.
                                              inicialLocation, // Decal spawned at the hit location.
@@ -101,40 +95,34 @@ function CreateArea(int d)
                                              ,true ,true, //bProjectOnTerrain y bProjectOnSkeletalMeshes
                                              ,,,d);
     
-    Area.bMovableDecal=true;
+    Area.bMovableDecal = true;
 
     matTime = new(none) Class'MaterialInstanceConstant';
     matTime.SetParent(Area.GetDecalMaterial());
     Area.SetDecalMaterial(matTime);
     matTIme.SetScalarParameterValue('Time_Charging',carga);
-    if(From==true)                                  // AREA ALIADA O ENEMIGA
-    {
-    matTIme.SetScalarParameterValue('Area_From',1);
-    }
-    else
-    {
-        matTIme.SetScalarParameterValue('Area_From',0);
-    }
-    matTIme.SetScalarParameterValue('Type_Area',Shape);  // AREA CIRCULAR O CUADRAD
+    
+    if( From ) matTime.SetScalarParameterValue('Area_From',1); // AREA ALIADA O ENEMIGA
+    else matTIme.SetScalarParameterValue('Area_From',0);
 
+    matTIme.SetScalarParameterValue('Type_Area',Shape);  // AREA CIRCULAR O CUADRAD
 }
 
 function ActivarParticulas()
 {
     particula.SetActive(true);
     particula.SetHidden(false);
-    particlesON=true;
+    particlesON = true;
 }
 
 function Charging(float deltatime)
 {
-    changetime=0.5/(durationcarga/deltatime);
-      carga=carga+changetime;
-      matTIme.SetScalarParameterValue('Time_Charging',carga);
-      if(carga>0.5-changetime)
-      {
-        hurt=true;
-      }
+  changetime  = 0.5 / ( durationcarga / deltatime );
+  carga       += changetime;
+
+  matTIme.SetScalarParameterValue( 'Time_Charging', carga );
+  
+  if( carga > 0.5 - changetime ) hurt = true;
 }
 
 function float Distancia2points(vector pos1,vector pos2)
@@ -161,11 +149,17 @@ function DoDamage(string text,int danio)
     {
       for( i = 0; i < colisionando.length; i++ )
       {
-        if( colisionando[i] != none && Area(colisionando[i])==none && colisionando[i]!=emitterpawn)
+        if( colisionando[i] != none && Area(colisionando[i]) == none && colisionando[i] != emitterpawn)
         {
-          //`log("COLISIONA = = "$colisionando[i]);
-          postexto=Attackable(colisionando[i]).location;
-          MyHud(PlayerController.myHUD).AddTexto( text, 2, postexto );
+          if( !Attackable(colisionando[i]).inmune )
+          {
+            postexto=Attackable(colisionando[i]).location;
+            MyHud(PlayerController.myHUD).AddTexto( text, 2, postexto );
+            
+            if( DoorOfLiesPawn(colisionando[i]) == none) Attackable(colisionando[i]).SetDamage( danio );
+            else DoorOfLiesPawn(colisionando[i]).SetDamage( danio );
+            
+          }
         }
       }
       
@@ -184,9 +178,10 @@ function AddDanger(string text)
   local vector postexto;
   local PlayerController PlayerController;
     
-  PlayerController = GetALocalPlayerController();
-  postexto=emitterPawn.location;
-  MyHud(PlayerController.myHUD).AddTexto(text,1,postexto);
+  PlayerController  = GetALocalPlayerController();
+  postexto          = emitterPawn.location;
+
+  MyHud(PlayerController.myHUD).AddTexto( text, 1, postexto );
 }
 
 function vector RotateToPlayer(vector ClickLocation)
@@ -198,8 +193,8 @@ function vector RotateToPlayer(vector ClickLocation)
   posicionpj      = emitterpawn.Location;
   posicionpj.z    = 0;
   
-  lookat = ClickLocation - posicionpj;
-  lookat.Z = -200;
+  lookat    = ClickLocation - posicionpj;
+  lookat.Z  = -200;
 
   if( Abs( lookat.X ) > abs( lookat.Y ) )
   {
@@ -218,7 +213,7 @@ function vector RotateToPlayer(vector ClickLocation)
   return lookat;
 }
 
-function Constructor(int ancho,int largo,bool fromi,bool Origin,int shap,float timecharge,float duracion,DecalMaterial dibujo,float CastDist, ParticleSystem typePart,int Efect)
+function Constructor(int ancho,int largo,bool fromi,bool Origin,int shap,float timecharge,float duracion,DecalMaterial dibujo,float CastDist, ParticleSystem typePart,int Efect, int danio_hace)
 {
   anchoarea = ancho;
   largoarea = largo;
@@ -235,6 +230,7 @@ function Constructor(int ancho,int largo,bool fromi,bool Origin,int shap,float t
 
   particula.SetTemplate(typePart);
   TypeSecondaryEffect = Efect;
+  damage = danio_hace;
 }
 
 DefaultProperties
@@ -268,26 +264,18 @@ DefaultProperties
   Components.Add(CollisionCylinder)  
   colision = CollisionCylinder
 
-  /*Begin Object Class=StaticMeshComponent Name=CalabazaMeshColl
-      StaticMesh=StaticMesh'Decals.Collision'
-      Scale = 10
-      HiddenGame=false
-  End Object
-  Components.Add(CalabazaMeshColl)
-  CollisionComponent=CalabazaMeshColl;*/
-
   Begin Object Class=StaticMeshComponent Name=CalabazaMesh
       LightEnvironment    = MyLightEnvironment;
       BlockNonZeroExtent  = True;
-      StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'
+      //StaticMesh=StaticMesh'Calabaza.StaticMesh.pumpkin_01_01_a'
       Scale       = 5
       HiddenGame  = true
   End Object
   Components.Add(CalabazaMesh)
   malla = CalabazaMesh
-   
+  
   Begin Object Class=ParticleSystemComponent Name=ParticlesFollow
-    Template = ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame'
+    //Template = ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame'
     Scale = 3
     bAutoActivate = false
   End Object

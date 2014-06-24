@@ -35,6 +35,7 @@ event Tick(float DeltaTime)
     myhud(PlayerController.myHUD).estadoEne=GetStateName();
     AddOneattack();
     
+    if( pawn.Health <= 0 ) GotoState('Dead');
     //DumpStateStack();
 }
 
@@ -53,7 +54,6 @@ function AddOneattack()
         {
             cantidadAtaquesDistance ++;
             recargarataque = 400;
-            //`log("RECARGA");
         }
         else if( recargarataque > 0 ) recargarataque --;
     }
@@ -107,8 +107,9 @@ Begin:
 
 state merodeando
 {
- local float playerDistance,rand,timeNextMove;
- local vector randomMove;
+    local float playerDistance,rand,timeNextMove;
+    local vector randomMove;
+    
     event SeePlayer (Pawn Seen)
     {
         super.SeePlayer(Seen);
@@ -216,8 +217,8 @@ state Comeback
 
 /*********************************/
 
-/******** ESTADO Explode *************/
-state Explode
+/******** ESTADO Dead *************/
+State Dead
 {
     event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
     {
@@ -233,11 +234,14 @@ state Explode
                                          ,true ,true //bProjectOnTerrain y bProjectOnSkeletalMeshes
                             );
 
-        Pawn.Destroy();
+        //Pawn.Destroy();
+        //Destroy();
     }
-Begin:
-    MoveTo( Pawn.Location, Pawn );
-    AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Die);    
+
+    Begin:
+        ResetMove();
+        MoveTo(Pawn.Location, Pawn);
+        DoorOfLiesPawn(Pawn).SetAnimationState(ST_Die);
 }
 /*********************************/
 
@@ -245,12 +249,13 @@ Begin:
 state Attack
 {
     local float playerDistance;
-    local Vector playerpos;
     ignores SeePlayer;
     
     event OnAnimEnd(AnimNodeSequence SeqNode, float PlayerTime, float ExcessTime)
     {
         super.OnAnimEnd(SeqNode,PlayerTime,ExcessTime);
+
+        TimerAttack = 0;
 
         if( Pawn(target).Health > 0 ) GotoState('Attack');
     }
@@ -259,11 +264,13 @@ state Attack
     {
         local AreaEnemiga bola;
         
-        AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Attack_distancia);
         bola = Spawn(class 'AreaEnemiga',,,target.Location);
-        bola.Constructor(300,300,false,false,1,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
+        bola.Constructor(300,300,false,false,1,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0, 5);
         bola.targetPoint = target.Location;
         bola.emitterPawn = pawn;
+
+        cantidadAtaquesDistance--;
+        TimerAttack = default.TimerAttack;
     }
 
     function Hit()
@@ -271,26 +278,28 @@ state Attack
         local AreaEnemiga bola;
 
         AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Attack_cerca);
+
         bola = Spawn(class 'AreaEnemiga',,,target.Location);
-        bola.Constructor(200,200,false,false,0,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0);
+        bola.Constructor(200,200,false,false,0,2,4,DecalMaterial'Decals.Materials.Area_Ciruclar',0,ParticleSystem'fuego2.ParticleSystem.ParticleFireFlame',0, 15);
         bola.targetPoint = target.Location;
         bola.emitterPawn = pawn;
     }
 
 Begin:
     ResetMove();
-    playerpos = target.Location;
+    MoveTo(Pawn.Location, Pawn);
 
-    playerDistance = VSize(Pawn.Location - target.Location); 
+    playerDistance = ABS( VSize(Pawn.Location - target.Location) ); 
 
     if( playerDistance < RangoAtacar) 
     {
-        if(cantidadAtaquesDistance > 0 )
+        if( playerDistance < 120 ) Hit();
+        else if( cantidadAtaquesDistance > 0 )
         {
-            Shoot();
-            cantidadAtaquesDistance--;
+            AnfibioPantano_Pawn(Pawn).SetAnimationState(ST_Attack_distancia);
+            if( TimerAttack == 0 ) Shoot();
+            
         }
-        else if( playerDistance < 120 ) Hit();
         else GotoState('Follow');
     }
     else GotoState('Follow');        
@@ -301,8 +310,8 @@ Begin:
 DefaultProperties
 {
     cantidadAtaquesDistance = 2;
-    RangoAtacar             = 600;
+    RangoAtacar             = 1200;
     distanceToComeback      = 1000;
     RangoPerseguir          = 800;
-    TimerAttack             = 0;
+    TimerAttack             = 2000;
 }

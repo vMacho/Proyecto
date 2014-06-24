@@ -91,5 +91,4 @@ DefaultProperties
     AttackRange = 600
     AttackTime = 1;
     distanceTosee = 1000
-    bulletClass = class'Bullet_Moco_slow'
 }

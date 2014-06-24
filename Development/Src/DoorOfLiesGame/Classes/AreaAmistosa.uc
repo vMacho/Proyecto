@@ -59,11 +59,12 @@ simulated event Tick(float Deltatime)
       SetRotation( Rotator( correcionRotacion * 1 ) );
       groundNormal.z        = 1;     // de esta manera no se bugean las areas que spawneamos
       
-
+      
       if( Reticule == none )
-      {
+      { 
+        class'DoorOfLiesGame.ReticuleActor'.static.PreInitialize( matTime );
         Reticule = Spawn( class'DoorOfLiesGame.ReticuleActor', , , groundLocation + ( groundNormal * 48 ), Rotator( groundNormal * -1 ), , true );
-        if( Reticule != none ) Reticule.Decal.SetDecalMaterial(matTime);
+        //if( Reticule != none ) Reticule.Decal.SetDecalMaterial(matTime);
       }
 
       Reticule.Decal.Width  = anchoarea;
@@ -147,7 +148,7 @@ simulated event Tick(float Deltatime)
         SetLocation(newLocation);
       }
 
-      DoDamage("-15",20);
+      DoDamage("-"$damage, damage);
 
       if( !particlesON )
       {
@@ -155,23 +156,9 @@ simulated event Tick(float Deltatime)
         particlesON = true;
         Action( TypeSecondaryEffect );  // ACCIONES SECUNDARIAS.
       }
-      /* if(TypeSecondaryEffect==3)
-      for(i=0;i<colisionando.length;i++)
-      {
-      pawn(colisionando[i]).GroundSpeed=150;
-      }*/
+      
     break;
   }  
-}
-event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
-{
-  super.Touch(Other, OtherComp, HitLocation, HitNormal);
-
-}
-
-event untouch(actor other)
-{
-  super.untouch(other);
 }
 
 simulated function Die()
@@ -219,8 +206,6 @@ simulated function CancelCast()
 
 function Action(int type)
 {
-  //local PlayerController PlayerController;
-  //PlayerController = GetALocalPlayerController();
   switch(type)
   {
     case 0:
@@ -232,16 +217,12 @@ function Action(int type)
     case 2:  // MURO
       malla.SetHidden(false);
       malla.SetStaticMesh(StaticMesh'PowerUpMaxCalabazas.muro');
-      // malla.SetRotation(Rotator(RotateToPlayer(groundLocation)*1));
       
       CylinderComponent.SetActorCollision(false, false);
       malla.SetActorCollision(true, true);
       CollisionComponent=malla;
-      
-      while( colisionando[0] != none )
-      {
-        recolocarActoresColisionando();
-      }
+     
+      while( colisionando.length > 0 ) recolocarActoresColisionando();
 
       bBlockActors = true;
     break;

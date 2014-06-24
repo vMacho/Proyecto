@@ -10,7 +10,6 @@ var Estados actual;
 
 var MaterialInterface ReticuleClickMaterial;
 var ReticuleActor Reticule;
-//var ReticuleActor CastArea;
 var Vector groundLocation,groundNormal;
 
 var int outrangenext;
@@ -25,168 +24,68 @@ simulated event PostBeginPlay()
 
 simulated event Tick(float Deltatime)
 {
-    
-    //local Vector groundNormal;
-    //local vector mouseOri,MouseDir;
-    //local Vector newLocation, direccion;
-   // local int i;
-   // local PlayerController PlayerController;
-   // for(i=0;i<colisionando.length;i++) { `log(""$i); `log(" "$colisionando[i]); }
-   //  PlayerController = GetALocalPlayerController();
-   // mouseOri=myhud(PlayerController.myHUD).MouseOrigin_;
-   // mouseDir=myhud(PlayerController.myHUD).MouseDir_; 
-   // if(outrangenext>0)
-   // {
-   //   outrangenext--;
-   // }
-   super.Tick(Deltatime);
+  local Attackable other;
+  local bool existe;
+  local int i;
+  super.Tick(Deltatime);
 
-    switch (actual)
-    {
-        /*case Seleccion:
+  switch (actual)
+  {
+      case Cargando:
 
-            Trace(groundLocation, groundNormal, mouseOri + (MouseDir * 100000), mouseOri, false);
-            if(TypeOrigin==false)
-            {
-            SetLocation(groundLocation);
-            }
-            else
-            {
-                  Reticule.Decal.Width=400;
-                  Reticule.Decal.Height=1200;
-              SetLocation(emitterPawn.Location);
-            }
-            SetRotation(Rotator(RotateToPlayer(groundLocation)*1));
-            groundNormal.z=1;     // de esta manera no se bugean las areas que spawneamos
-           if(Reticule==none)
-           {
-               Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , groundLocation + (groundNormal* 48), Rotator(groundNormal * -1), , true);  ;
-               if(Reticule != none)
-                {
-                Reticule.Decal.SetDecalMaterial(matTime);    
-                }
-           }
-           if(Reticule!=none)
-           {
-                 if(TypeOrigin==false)
-                  {
-                  Reticule.SetLocation(groundLocation);
-                  }
-                  else
-                  {
-                  Reticule.SetLocation(emitterPawn.Location);
-                  }
-                 Reticule.SetRotation(Rotator(RotateToPlayer(groundLocation)*1));
-           }
-           if(CastArea==none)   // AREA DONDE PODRA CASTEAR EL PJ
-           {
-               CastArea = Spawn(class'DoorOfLiesGame.ReticuleActor', , , groundLocation + (groundNormal* 48), Rotator(groundNormal * -1), , true);  ;
-               
-               if(CastArea != none)
-                {
+          
 
-                CastArea.Decal.SetDecalMaterial(ReticuleClickMaterial);
-                CastArea.Decal.Width=distanciaCast*2;  
-                CastArea.Decal.Height=distanciaCast*2;  
-                }
-           }
-           if(CastArea!=none)
-           {
-                CastArea.SetLocation(emitterPawn.Location);
-           }
-           if(DoorOfLiesPlayerController(PlayerController).bLeftMousePressed==true  )
-           {
-            if(Distancia2points(groundLocation,emitterPawn.Location)<distanciaCast)
-            {
-           
-              CastArea.Decal.ResetToDefaults();
-              CastArea=none;
-              setTim();
-              actual=Cargando;
-            }
-            else
-            {
-              if(outrangenext==0)
-              {
-                outrangenext=75;
-               AddDanger("Fuera de rango");
-              }
-            }
-           }
-           if(DoorOfLiesPlayerController(PlayerController).bRightMousePressed==true)
-           {
-             CastArea.Decal.ResetToDefaults();
-              CastArea=none;
-             Die();
-           }
-           
-        break;*/
-        case Cargando:
-            //DoorOfLiesPlayerController(PlayerController).GotoState('CastingHability');
-            groundNormal.x=0;
-            groundNormal.y=0;
-            groundNormal.z=1;     // de esta manera no se bugean las areas que spawneamos
-            
-           if( Reticule == none )
-           {
-               Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , Location + (groundNormal* 48), Rotator(groundNormal * -1), , true);  
+          groundNormal.x=0;
+          groundNormal.y=0;
+          groundNormal.z=1;     // de esta manera no se bugean las areas que spawneamos
 
-               if(Reticule != none)
+          if( Reticule == none )
+          {
+              Class'DoorOfLiesGame.ReticuleActor'.static.PreInitialize( matTime );
+              Reticule = Spawn(class'DoorOfLiesGame.ReticuleActor', , , Location + (groundNormal* 48), Rotator(groundNormal * -1), , true);  
+
+              if(Reticule != none)
               {
                 Reticule.Decal.SetDecalMaterial( matTime );   
                 Reticule.Decal.Width  = anchoarea;
                 Reticule.Decal.Height = largoarea;
               }
-           }
-           if(Reticule!=none)
-           {
+          }
 
-           }
-            if( hurt )
+          if( hurt ) actual = Inflige;
+
+          Charging( Deltatime );
+      break;
+      case Inflige:
+
+          foreach CollidingActors(class'Attackable', other, 200, Location + (groundNormal* 48) ) 
+          {
+            if( emitterPawn != none )
             {
-              //DoorOfLiesPlayerController(PlayerController).hability_finished=true;
-              actual=Inflige;
-              //locationShoot=emitterPawn.Location;
+              if( Other != none && emitterPawn != Other )
+              {
+                existe = false;
+
+                for( i = 0; i < colisionando.length; i++ ) if( colisionando[i] == other ) existe = true; //Si ya esta en el array no le volvemos a meter
+                
+                if( !existe ) colisionando.AddItem( other );
+              }
             }
-            /* if(DoorOfLiesPlayerController(PlayerController).bRightMousePressed==true)  //Interrumpir casteo
-            {
-                DoorOfLiesPlayerController(PlayerController).GotoState('Idle');
-                 CastArea.Decal.ResetToDefaults();
-                  CastArea=none;
-                 Die();
-            }*/
-            Charging(Deltatime);
-        break;
-        case Inflige:
-        
-   
-         /* if(TypeOrigin==true)
-            {
-            direccion = Normal(groundLocation - locationShoot);
-            newLocation = Location;
-            newLocation += direccion * speed * Deltatime;
-            SetLocation(newLocation);
-            }*/
+          }
 
-            DoDamage( "-15", 20 );
-            if( !particlesON )
-            {
+          DoDamage( "-"$damage, damage );
+            
+          if( !particlesON )
+          {
               ActivarParticulas();
               Action( TypeSecondaryEffect );  // ACCIONES SECUNDARIAS.
-            }
-        break;
+          }
+
+      break;
     }
      
 }
-event Touch(Actor Other, PrimitiveComponent OtherComp, vector HitLocation, vector HitNormal)
-{
-  super.Touch(Other, OtherComp, HitLocation, HitNormal);
 
-}
-event untouch(actor other)
-{
-  super.untouch(other);
-}
 simulated function Die()
 {
   
@@ -220,7 +119,7 @@ function Action(int type)
       bBlockActors = true;
     break;
     case 3: //RALENTIZAR
-      //Spawn( class 'Bullet_Moco_slow',,, Location + (groundNormal) );
+      
       for( i = 0; i < colisionando.length; i++ )
       {
         if(Attackable(colisionando[i]) != none  && Attackable(colisionando[i]).GroundSpeed == Attackable(colisionando[i]).default_humanoid_GroundSpeed) Attackable(colisionando[i]).SlowGroud(100, 2);

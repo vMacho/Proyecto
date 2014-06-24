@@ -20,6 +20,10 @@ function SetAnimationState(EAnimState eState)
     if(AnimNodeBlendList != none) AnimNodeBlendList.SetActiveChild(eState, 0.1f);
 }
 
+function bool Died(Controller Killer, class<DamageType> DamageType, vector HitLocation)
+{
+}
+
 DefaultProperties
 { 
     Components.Remove(Sprite)
