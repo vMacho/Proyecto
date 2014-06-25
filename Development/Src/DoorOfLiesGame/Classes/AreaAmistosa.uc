@@ -159,7 +159,7 @@ simulated event Tick(float Deltatime)
               particlesON=true;
               Action(TypeSecondaryEffect);  // ACCIONES SECUNDARIAS.
             }
-           /* if(TypeSecondaryEffect==3)
+           /*if(TypeSecondaryEffect==3)
              for(i=0;i<colisionando.length;i++)
               {
                 pawn(colisionando[i]).GroundSpeed=150;
@@ -197,6 +197,7 @@ simulated function CancelCast()
 
 function Action(int type)
 {
+
 //local PlayerController PlayerController;
 //PlayerController = GetALocalPlayerController();
   switch(type)
@@ -219,7 +220,8 @@ function Action(int type)
     }
     bBlockActors=true;
     break;
-    case 3: //RALENTIZAR
+    case 3: 
+    
     break;
     case 4: //DERRIBAR
     break;

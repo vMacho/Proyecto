@@ -40,9 +40,16 @@
 			gotoAndStop(3);
 				
 			accionado=true;
+			}
+		};
+		public function ActiveSkill():void
+		{
+		 if(accionado==false)
+			{
+			gotoAndStop(3);
 				
-				//PRUEBA
-				shoot_spell();
+			accionado=true;
+				
 			}
 		};
 		private function shoot_spell()

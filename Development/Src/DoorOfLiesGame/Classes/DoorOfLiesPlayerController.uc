@@ -246,6 +246,9 @@ exec function E_Hability ()
 exec function R_Hability ()
 {
 
+	
+
+
 }
 
 exec function ZoomCameraDown() //Scroll de la camara

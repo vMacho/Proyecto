@@ -319,6 +319,7 @@ state Attack
 
 Begin:
     ResetMove();
+   
     playerpos = target.Location;
 
     playerDistance = VSize(Pawn.Location - target.Location); 

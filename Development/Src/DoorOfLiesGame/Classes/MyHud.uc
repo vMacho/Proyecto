@@ -43,7 +43,7 @@ simulated event PostBeginPlay() //Al empezar
 
     MyHudHealth = new class'DoorOfLiesHud';
     MyHudHealth.Start();
-    MyHudHealth.UpdateLife(DoorOfLiesPlayerController(PlayerOwner).Pawn.Health);
+    //MyHudHealth.UpdateLife(DoorOfLiesPlayerController(PlayerOwner).Pawn.Health);
 
     GameMinimap = DoorOfLiesGame(WorldInfo.Game).GameMinimap;
 
