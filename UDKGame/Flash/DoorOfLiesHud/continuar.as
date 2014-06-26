@@ -3,7 +3,7 @@
 	import flash.display.MovieClip;
 	import flash.events.MouseEvent;
     import flash.events.Event;
-	
+	import flash.external.ExternalInterface;
 	public class continuar extends MovieClip {
 		
 		
@@ -17,8 +17,9 @@
 		
 		private function mouse_click(e:MouseEvent):void
 		{
-		(MovieClip(parent.parent.parent) as HUD).changeState(1);
-		(MovieClip(parent.parent.parent).getChildByName("_btnPause")as BotonPause).reiniciar();
+		//(MovieClip(parent.parent.parent) as HUD).changeState(1);
+		//(MovieClip(parent.parent.parent).getChildByName("_btnPause")as BotonPause).reiniciar();
+	
 		};
 		private function mouse_over(e:MouseEvent):void
 		{

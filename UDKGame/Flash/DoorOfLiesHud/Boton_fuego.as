@@ -41,8 +41,16 @@
 				
 			accionado=true;
 				
-				//PRUEBA
-				shoot_spell();
+			}
+		};
+		public function ActiveSkill():void
+		{
+		 if(accionado==false)
+			{
+			gotoAndStop(3);
+				
+			accionado=true;
+				
 			}
 		};
 		private function shoot_spell()
