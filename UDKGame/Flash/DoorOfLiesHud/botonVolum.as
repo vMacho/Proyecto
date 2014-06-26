@@ -16,7 +16,7 @@
 		
 		private function mouse_click(e:MouseEvent):void
 		{
-		gotoAndStop(2);
+		
 	
 		};
 		private function mouse_over(e:MouseEvent):void

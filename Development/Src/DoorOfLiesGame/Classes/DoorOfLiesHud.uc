@@ -250,6 +250,6 @@ function vector2d GetMouseCoordinates()
 
 DefaultProperties
 {
-	MovieInfo = SwfMovie'DoorOfLiesHud.HealthHud'
-	bDisplayWithHudOff = false;
+	MovieInfo = SwfMovie'DoorOfLiesHud_gabas.HealthHud'
+	bDisplayWithHudOff = false
 }

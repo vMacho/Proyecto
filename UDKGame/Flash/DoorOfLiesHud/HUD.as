@@ -37,7 +37,7 @@
 						getChildByName("_btnMainMenu").visible = false;
 						ExternalInterface.call("PauseGameControl", false);
 						(getChildByName("_btnPause")as BotonPause).reiniciar();
-						//(getChildByName("_close")as close).reiniciar();
+						(getChildByName("_close")as close).reiniciar();
 				
 					break;
 				case 3:  // MODO OPCIONES

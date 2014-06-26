@@ -28,7 +28,6 @@
 				
 		override public function ControlaClick(event:TimerEvent):void
 		{			
-			trace("ENTRA");
 			PauseGame();
 			if(activo==false)
 			{
