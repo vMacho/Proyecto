@@ -102,30 +102,28 @@ function ActiveSkill(int i)
 {
 	switch (i)
 	{
-		case 1:
+		case 0:
 			ActionScriptVoid("_root._POWER_FIRE.ActiveSkill");
 			break;
-		case 2:
+		case 1:
 			ActionScriptVoid("_root._POWER_WATER.ActiveSkill");
 			break;
-		case 3:
+		case 2:
 			ActionScriptVoid("_root._POWER_WIND.ActiveSkill");
 			break;
-	
-		case 4:
+		case 3:
 			ActionScriptVoid("_root._POWER_EARTH.ActiveSkill");
 			break;
-		default:
-			
+		default:		
 	}
 }
 
-function ColdownSkill(int i,int cooldown)
+function ColdownSkill(int i, int cooldown)
 {
 	local GFxObject _HUDspell;
 	switch (i)
 	{
-		case 1:
+		case 0:
 		
 		MC_Root = GetVariableObject("root");
        
@@ -140,7 +138,7 @@ function ColdownSkill(int i,int cooldown)
 		}
 		ActionScriptVoid("_root._POWER_FIRE.shoot_spell");
 			break;
-		case 2:
+		case 1:
 
 		MC_Root = GetVariableObject("root");
        
@@ -155,7 +153,7 @@ function ColdownSkill(int i,int cooldown)
 		}
 		ActionScriptVoid("_root._POWER_WATER.shoot_spell");
 			break;
-		case 3:
+		case 2:
 
 		MC_Root = GetVariableObject("root");
        
@@ -170,7 +168,7 @@ function ColdownSkill(int i,int cooldown)
 		}
 		ActionScriptVoid("_root._POWER_WIND.shoot_spell");
 			break;
-		case 4:
+		case 3:
 
 		MC_Root = GetVariableObject("root");
        
@@ -194,6 +192,8 @@ function AddMision(string Descripcion,string Detalles)
 		temp.MinTit=Descripcion;
 		temp.MinDesc=Detalles;
 		Misiones.AddItem(temp);
+
+		Actualizar();
 		
 }
 function DelMision(string titulo)
@@ -206,6 +206,9 @@ function DelMision(string titulo)
 	  			Misiones.RemoveItem(Misiones[i]);
 	  		}
 	  	}   
+
+	  	Actualizar();
+		
 }
 function Actualizar()
 {

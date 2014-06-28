@@ -322,7 +322,7 @@ function DrawHUD()
         Canvas.DrawText( "Use Button -> " $ playerControllerOwner.use_button );
 
 
-        for(i = 0; i < playerControllerOwner.misiones.length; i++ )
+        /*for(i = 0; i < playerControllerOwner.misiones.length; i++ )
         {
             Canvas.SetPos( 1000, 275 + ( i * 25) );
             
@@ -330,7 +330,7 @@ function DrawHUD()
             {
                 Canvas.DrawText( playerControllerOwner.misiones[i]._title );
             }
-        }
+        }*/
 
     }
 

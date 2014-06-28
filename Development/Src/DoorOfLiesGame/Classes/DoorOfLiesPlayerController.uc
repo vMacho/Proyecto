@@ -62,8 +62,8 @@ enum Habilities
 {
 	Fuego,
 	Agua,
-	Tierra,
-	Aire
+	Aire,
+	Tierra
 };
 
 var array <Hability> powers;
@@ -145,7 +145,11 @@ function bool change_habilty ( int Hability_to_active )
 function UpdateHabilities( float DeltaTime )
 {
 	local int i;
-	for(i = 0; i < powers.length; i++ ) if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
+
+	for(i = 0; i < powers.length; i++ )
+	{
+		if ( powers[i].actual_cooldown  > 0 ) powers[i].actual_cooldown -= DeltaTime;
+	}
 
 	if( DoorOfLiesPawn(Pawn).inmune )
 	{
@@ -168,6 +172,8 @@ exec function Q_Hability ()
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
 		area_activa.habilidad_player = Fuego;
+
+		MyHud(myHUD).MyHudHealth.ActiveSkill(Fuego);
 	}
 }
 
@@ -180,6 +186,8 @@ exec function W_Hability ()
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
 		area_activa.habilidad_player = Agua;
+
+		MyHud(myHUD).MyHudHealth.ActiveSkill(Agua);
 	}
 }
 
@@ -191,7 +199,9 @@ exec function E_Hability ()
 		area_activa.Constructor(50,50,true,false,1,0.15,1,DecalMaterial'Decals.Materials.Area_Ciruclar',400,ParticleSystem'rotura.Particles.flash',1, 0);  //EFECTO TELEPORT
 		area_activa.targetPoint = MouseHitWorldLocation;
 		area_activa.emitterPawn = pawn;
-		area_activa.habilidad_player = Tierra;
+		area_activa.habilidad_player = Aire;
+
+		MyHud(myHUD).MyHudHealth.ActiveSkill(Aire);
 	}
 }
 
@@ -204,6 +214,9 @@ exec function R_Hability ()
 
 		powers[Tierra].manas--;
         powers[Tierra].actual_cooldown = powers[Tierra].cooldown;
+
+        MyHud(myHUD).MyHudHealth.ActiveSkill(Tierra);
+        MyHud(myHUD).MyHudHealth.ColdownSkill(Tierra, powers[Tierra].actual_cooldown);
 	}
 }
 
@@ -223,6 +236,7 @@ function CreateQuest( int id, string title, string description )
 	mision.Quest( id, title, description );
 
 	misiones.AddItem( mision );
+	MyHud(myHUD).MyHudHealth.AddMision(title, description);
 }
 
 function bool FinishQuest( int id )
@@ -238,6 +252,7 @@ function bool FinishQuest( int id )
 		{
 			misiones[i].doIt = true;
 			exito = true;	
+			MyHud(myHUD).MyHudHealth.DelMision(misiones[i]._title);
 		}
 	}
 
@@ -740,6 +755,7 @@ Begin:
 		hability_finished = false;
 		powers[Hability_active].manas--;
         powers[Hability_active].actual_cooldown = powers[Hability_active].cooldown;
+        MyHud(myHUD).MyHudHealth.ColdownSkill(Hability_active, powers[Hability_active].actual_cooldown);
 
 		GotoState('idle');
 	}

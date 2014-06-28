@@ -41,12 +41,17 @@ event Tick(float deltatime)
 {
     local DoorOfLiesPlayerController Player;
     local float distance_to_player;
+    local bool finish_quest;
+    local int i;
+
     super.Tick(deltatime);   
 
     if( !activado )
     {
         Player = DoorOfLiesPlayerController(GetALocalPlayerController());
         distance_to_player = ABS( VSize( Location - Player.Pawn.Location ) );
+
+        finish_quest = true;
 
         if( distance_to_player <= distance_activate )
         {
@@ -55,6 +60,10 @@ event Tick(float deltatime)
                 Player.powers[type].activable = true;
                 activado = true;
                 sistema_particulas.DeactivateSystem();
+
+                for( i = 0; i < Player.powers.length; i++ ) if( !Player.powers[i].activable ) finish_quest = false;
+
+                if( finish_quest ) Player.FinishQuest(1);
             }
             else if( show_advise )
             {
